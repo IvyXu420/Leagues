@@ -16,7 +16,6 @@ public partial class HomeView
         InitializeComponent();
         DataContext = new HomeViewModel();
         Loaded += OnLoaded;
-        Unloaded += OnUnloaded;
     }
 
 
@@ -39,11 +38,5 @@ public partial class HomeView
     {
         if (DataContext is HomeViewModel vm)
             await vm.InitializeAsync();
-    }
-
-    private async void OnUnloaded(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is HomeViewModel vm)
-            await vm.ShutdownAsync();
     }
 }

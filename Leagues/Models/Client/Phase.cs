@@ -35,10 +35,11 @@ public sealed class Phase : IAsyncDisposable
             monitorCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = monitorCts.Token;
 
-            socket = (ClientWebSocket)await LcuConnectionFactory.CreateWebSocketAsync();
-            await SubscribeAsync(token);
+            var monitoredSocket = (ClientWebSocket)await LcuConnectionFactory.CreateWebSocketAsync();
+            socket = monitoredSocket;
+            await SubscribeAsync(monitoredSocket, token);
 
-            monitorTask = Task.Run(() => ReceiveLoopAsync(token), token);
+            monitorTask = Task.Run(() => ReceiveLoopAsync(monitoredSocket, token), token);
             return true;
         }
         catch (Exception ex)
@@ -49,32 +50,28 @@ public sealed class Phase : IAsyncDisposable
         }
     }
 
-    private async Task SubscribeAsync(CancellationToken token)
+    private static async Task SubscribeAsync(ClientWebSocket monitoredSocket, CancellationToken token)
     {
-        if (socket is null)
-        {
-            return;
-        }
-
         var subscriptionMessage = "[5, \"OnJsonApiEvent_lol-gameflow_v1_gameflow-phase\"]"u8;
-        await socket.SendAsync(new ArraySegment<byte>(subscriptionMessage.ToArray()), WebSocketMessageType.Text, true,
+        await monitoredSocket.SendAsync(new ArraySegment<byte>(subscriptionMessage.ToArray()),
+            WebSocketMessageType.Text, true,
             token);
     }
 
-    private async Task ReceiveLoopAsync(CancellationToken token)
+    private async Task ReceiveLoopAsync(ClientWebSocket monitoredSocket, CancellationToken token)
     {
         var buffer = new byte[4096];
 
         try
         {
-            while (socket is { State: WebSocketState.Open } && !token.IsCancellationRequested)
+            while (monitoredSocket.State == WebSocketState.Open && !token.IsCancellationRequested)
             {
                 using var stream = new MemoryStream();
                 WebSocketReceiveResult result;
 
                 do
                 {
-                    result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
+                    result = await monitoredSocket.ReceiveAsync(new ArraySegment<byte>(buffer), token);
 
                     if (result.MessageType == WebSocketMessageType.Close)
                     {
@@ -109,12 +106,15 @@ public sealed class Phase : IAsyncDisposable
         }
         finally
         {
-            socket?.Dispose();
-            socket = null;
-            monitorCts?.Dispose();
-            monitorCts = null;
-            monitorTask = null;
-            lastPhase = null;
+            if (ReferenceEquals(socket, monitoredSocket))
+            {
+                monitoredSocket.Dispose();
+                socket = null;
+                monitorCts?.Dispose();
+                monitorCts = null;
+                monitorTask = null;
+                lastPhase = null;
+            }
         }
     }
 
@@ -177,28 +177,16 @@ public sealed class Phase : IAsyncDisposable
         return null;
     }
 
-    public async Task StopAsync()
+    public Task StopAsync()
     {
         monitorCts?.Cancel();
-
-        if (socket is { State: WebSocketState.Open })
-        {
-            try
-            {
-                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "stop", CancellationToken.None);
-            }
-            catch
-            {
-                Logging.Logging.Logger.Error("Phase websocket close failed.");
-            }
-        }
-
         socket?.Dispose();
         socket = null;
         monitorCts?.Dispose();
         monitorCts = null;
         lastPhase = null;
         monitorTask = null;
+        return Task.CompletedTask;
     }
 
     public async ValueTask DisposeAsync()
