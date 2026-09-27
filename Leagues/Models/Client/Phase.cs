@@ -20,6 +20,8 @@ public sealed class Phase : IAsyncDisposable
 
     public event EventHandler<string>? MonitorError;
 
+    public string? CurrentPhase => lastPhase;
+
     public bool IsMonitoring =>
         socket is { State: WebSocketState.Open } && monitorTask is { IsCompleted: false };
 
@@ -180,6 +182,20 @@ public sealed class Phase : IAsyncDisposable
     public Task StopAsync()
     {
         monitorCts?.Cancel();
+        lastPhase = null;
+
+        if (socket is { State: WebSocketState.Open })
+        {
+            try
+            {
+                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "stop", CancellationToken.None);
+            }
+            catch
+            {
+                Logging.Logging.Logger.Error("Phase websocket close failed.");
+            }
+        }
+
         socket?.Dispose();
         socket = null;
         monitorCts?.Dispose();

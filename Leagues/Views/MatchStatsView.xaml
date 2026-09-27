@@ -3,13 +3,59 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:viewModels="clr-namespace:Leagues.ViewModels"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance viewModels:MatchStatsViewModel}"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <TextBlock Style="{StaticResource MaterialDesignDisplayMediumTextBlock}"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock Text="{Binding StatusText}"
+                   Style="{StaticResource MaterialDesignBodyLargeTextBlock}"
                    HorizontalAlignment="Center"
-                   VerticalAlignment="Center">
-            Not in a match.
-        </TextBlock>
+                   Margin="0,8,0,16" />
+        <ListBox Grid.Row="1" ItemsSource="{Binding Players}"
+                 BorderThickness="0"
+                 HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type viewModels:MatchStatItemViewModel}">
+                    <materialDesign:Card Margin="0,3" Padding="8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Width="52" Height="52" Padding="0"
+                                    Command="{Binding OpenSearchCommand}"
+                                    ToolTip="Open match history">
+                                <Ellipse>
+                                    <Ellipse.Fill>
+                                        <ImageBrush ImageSource="{Binding Avatar}" />
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                            </Button>
+                            <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Stats.PlayerName}"
+                                           Style="{StaticResource MaterialDesignSubtitle1TextBlock}" />
+                                <TextBlock Text="{Binding Stats.SummonerLevel, StringFormat=Level {0}}"
+                                           Style="{StaticResource MaterialDesignCaptionTextBlock}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding Stats.Kda, StringFormat={}{0:0.00} KDA}"
+                                           HorizontalAlignment="Right"
+                                           Style="{StaticResource MaterialDesignBody1TextBlock}" />
+                                <TextBlock Text="{Binding Stats.WinRate, StringFormat={}{0:0.0}% win rate}"
+                                           HorizontalAlignment="Right"
+                                           Style="{StaticResource MaterialDesignCaptionTextBlock}" />
+                            </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

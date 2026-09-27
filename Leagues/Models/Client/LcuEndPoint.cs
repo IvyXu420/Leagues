@@ -30,6 +30,18 @@ public static class LcuEndPoint
     public static string CurrentSummoner
         => "lol-summoner/v1/current-summoner";
 
+    public static string Summoner(long summonerId)
+        => $"lol-summoner/v1/summoners/{summonerId}";
+
+    public static string ChampSelectSession
+        => "lol-champ-select/v1/session";
+
+    public static string GameflowSession
+        => "lol-gameflow/v1/session";
+
+    public static string ProfileIcon(int profileIconId)
+        => $"lol-game-data/assets/v1/profile-icons/{profileIconId}.jpg";
+
     public static string MatchHistory(string uuid, int begIndex = 0, int endIndex = 20)
         => $"lol-match-history/v1/products/lol/{uuid}/matches?begIndex={begIndex}&endIndex={endIndex}";
 

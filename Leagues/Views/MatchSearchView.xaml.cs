@@ -1,12 +1,11 @@
-using System.Windows.Controls;
 using System.Windows.Input;
 using Leagues.Models.Mapper;
 using Leagues.ViewModels;
 using static Leagues.Models.Logging.Logging;
 
-namespace Leagues;
+namespace Leagues.Views;
 
-public partial class MatchSearchView : UserControl
+public partial class MatchSearchView
 {
     public MatchSearchView()
     {
@@ -20,12 +19,21 @@ public partial class MatchSearchView : UserControl
     {
         if (e.Key != Key.Enter || isQuerying)
             return;
+
+        await SearchPlayerAsync(InputPlayerName.Text);
+    }
+
+    public async Task SearchPlayerAsync(string playerName)
+    {
+        if (isQuerying)
+            return;
+
         isQuerying = true;
         ResultsList.ItemsSource = null;
 
         try
         {
-            var playerName = InputPlayerName.Text;
+            InputPlayerName.Text = playerName;
 
             if (string.IsNullOrWhiteSpace(playerName))
             {
@@ -50,7 +58,7 @@ public partial class MatchSearchView : UserControl
         catch (Exception ex)
         {
             Snackbar.MessageQueue?.Enqueue($"Error fetching match history: {ex.Message}");
-            Logger.Error($"Error fetching match history for player {InputPlayerName.Text}: {ex}");
+            Logger.Error($"Error fetching match history for player {playerName}: {ex}");
         }
         finally
         {
