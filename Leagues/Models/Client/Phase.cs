@@ -107,8 +107,16 @@ public sealed class Phase : IAsyncDisposable
         {
             MonitorError?.Invoke(this, $"Phase websocket receive failed: {ex.Message}");
         }
+        finally
+        {
+            socket?.Dispose();
+            socket = null;
+            monitorCts?.Dispose();
+            monitorCts = null;
+            monitorTask = null;
+            lastPhase = null;
+        }
     }
-
 
     /// <summary>
     /// Extract the phase from the payload received from websockets
