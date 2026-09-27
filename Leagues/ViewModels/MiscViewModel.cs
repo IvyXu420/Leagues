@@ -8,7 +8,7 @@ public partial class MiscViewModel : ObservableObject
 {
     private readonly RiotClientSettingsService settingsService;
 
-    [ObservableProperty] public partial string SelectedLanguage { get; private set; }
+    [ObservableProperty] public partial string SelectedLanguage { get; set; }
 
     public ObservableCollection<string> AvailableLanguages { get; } =
     [
