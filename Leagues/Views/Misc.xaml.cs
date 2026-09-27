@@ -7,5 +7,6 @@ public partial class Misc : UserControl
     public Misc()
     {
         InitializeComponent();
+        DataContext = new ViewModels.MiscViewModel();
     }
 }

@@ -20,20 +20,20 @@ public static class Registry
         RegistryView.Registry32
     ];
 
-    private static string? GetRiotClientPath()
+    public static string? GetRiotClientPath()
     {
         var driveRoots = GetFixedDriveRoots();
 
         return ResolveFirstExistingPath(
-            TryGetProcessExecutablePath("RiotClientServices"),
             ResolveExecutableFromRegistry(
                 [
                     @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\RiotClientServices.exe",
                     @"SOFTWARE\Riot Games\Riot Client",
-                    @"SOFTWARE\WOW6432Node\Riot Games\Riot Client"
+                    @"SOFTWARE\WOW6432Node\Riot Games\Riot Client",
+                    @"SOFTWARE\Tencent\LOL"
                 ],
                 [string.Empty, "Path", "InstallPath", "InstallLocation"],
-                ["RiotClientServices.exe"]),
+                ["RiotClientServices.exe", @"Riot Client\RiotClientServices.exe"]),
             ResolveFromUninstallRegistry(
                 ["Riot Client", "League of Legends"],
                 ["DisplayIcon", "InstallLocation", "InstallSource", "UninstallString"],
@@ -50,7 +50,6 @@ public static class Registry
         var driveRoots = GetFixedDriveRoots();
 
         return ResolveFirstExistingPath(
-            TryGetProcessExecutablePath("LeagueClient"),
             ResolveExecutableFromRegistry(
                 [
                     @"SOFTWARE\Tencent\LOL",
@@ -75,7 +74,6 @@ public static class Registry
         var driveRoots = GetFixedDriveRoots();
 
         return ResolveFirstExistingPath(
-            TryGetProcessExecutablePath("wegame"),
             ResolveExecutableFromRegistry(
                 [
                     @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\wegame.exe",
@@ -372,29 +370,6 @@ public static class Registry
         }
     }
 
-    private static string? TryGetProcessExecutablePath(string processName)
-    {
-        foreach (var process in Process.GetProcessesByName(processName))
-        {
-            using (process)
-            {
-                try
-                {
-                    var processPath = process.MainModule?.FileName;
-                    if (!string.IsNullOrWhiteSpace(processPath) && File.Exists(processPath))
-                    {
-                        return processPath;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error($"Unable to inspect process path for {processName}: {ex.Message}");
-                }
-            }
-        }
-
-        return null;
-    }
 
     private static bool ContainsAnyKeyword(string? source, IEnumerable<string> keywords)
     {
