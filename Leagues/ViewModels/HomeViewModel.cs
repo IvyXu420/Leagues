@@ -18,9 +18,13 @@ public partial class HomeViewModel : ObservableObject
 
     [ObservableProperty] public partial Visibility FeatureButtonsVisibility { get; set; } = Visibility.Collapsed;
 
-    [ObservableProperty] public partial Visibility DeclineButtonVisibility { get; set; } = Visibility.Collapsed;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(DeclineMatchCommand))]
+    public partial Visibility DeclineButtonVisibility { get; set; } = Visibility.Collapsed;
 
-    [ObservableProperty] public partial Visibility AcceptButtonVisibility { get; set; } = Visibility.Collapsed;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AcceptMatchCommand))]
+    public partial Visibility AcceptButtonVisibility { get; set; } = Visibility.Collapsed;
 
     [ObservableProperty] public partial string AutoAcceptButtonText { get; set; }
 
@@ -37,7 +41,7 @@ public partial class HomeViewModel : ObservableObject
     public HomeViewModel()
     {
         AutoAcceptButtonText = IsAutoAcceptEnabled ? "Disable AutoAccept" : "Enable AutoAccept";
-        dispatcher = Application.Current.Dispatcher;
+        dispatcher = Dispatcher.CurrentDispatcher;
         PhaseMonitor.PhaseChanged += OnPhaseChanged;
         PhaseMonitor.MonitorError += OnPhaseMonitorError;
         clientPollTimer.Tick += ClientPollTimer_Tick;
@@ -83,7 +87,7 @@ public partial class HomeViewModel : ObservableObject
 
     private bool CanLaunchClient() => !IsClientRunning;
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanDeclineMatch))]
     private async Task DeclineMatchAsync()
     {
         if (IsAutoAcceptEnabled)
@@ -93,15 +97,21 @@ public partial class HomeViewModel : ObservableObject
 
         AcceptButtonVisibility = Visibility.Visible;
         var declined = await Match.Decline();
+        DeclineButtonVisibility = Visibility.Collapsed;
         Logger.Info(declined ? "Match declined" : "Failed to decline match");
     }
 
-    [RelayCommand]
+    private bool CanDeclineMatch() => DeclineButtonVisibility == Visibility.Visible;
+
+    [RelayCommand(CanExecute = nameof(CanAcceptMatch))]
     private async Task AcceptMatchAsync()
     {
         var accepted = await Match.Accept();
+        AcceptButtonVisibility = Visibility.Collapsed;
         Logger.Info(accepted ? "Match accepted" : "Failed to accept match");
     }
+
+    private bool CanAcceptMatch() => AcceptButtonVisibility == Visibility.Visible;
 
     public async Task InitializeAsync()
     {
@@ -159,6 +169,8 @@ public partial class HomeViewModel : ObservableObject
         showingFeatureMode = false;
         LaunchClientVisibility = Visibility.Visible;
         FeatureButtonsVisibility = Visibility.Collapsed;
+        DeclineButtonVisibility = Visibility.Collapsed;
+        AcceptButtonVisibility = Visibility.Collapsed;
         SetStatus("Client is not running.");
     }
 
@@ -172,7 +184,11 @@ public partial class HomeViewModel : ObservableObject
     private async void OnPhaseChanged(object? sender, string phase)
     {
         var isReadyCheck = string.Equals(phase, "ReadyCheck", StringComparison.OrdinalIgnoreCase);
-        DeclineButtonVisibility = isReadyCheck ? Visibility.Visible : Visibility.Collapsed;
+        RunOnUiThread(() =>
+        {
+            DeclineButtonVisibility = isReadyCheck ? Visibility.Visible : Visibility.Collapsed;
+            AcceptButtonVisibility = isReadyCheck ? Visibility.Visible : Visibility.Collapsed;
+        });
 
         if (!isReadyCheck || !IsAutoAcceptEnabled)
             return;
