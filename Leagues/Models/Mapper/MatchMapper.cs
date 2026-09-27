@@ -62,7 +62,7 @@ public static class MatchMapper
             })
             .Where(summary => summary != null)
             .ToList();
-        Cache.Add(playerName, summaries);
+        Cache.Add(playerUuid, summaries);
         return summaries;
     }
 }
