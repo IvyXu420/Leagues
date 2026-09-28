@@ -147,7 +147,7 @@ public static class MatchStats
 
     private static List<JsonElement> ReadArray(JsonElement root, string propertyName)
         => root.TryGetProperty(propertyName, out var array) && array.ValueKind == JsonValueKind.Array
-            ? array.EnumerateArray().ToList()
+            ? [.. array.EnumerateArray()]
             : [];
 
     private static string? GetString(JsonElement element, string propertyName)
