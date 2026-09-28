@@ -15,50 +15,64 @@ public partial class MatchStatsViewModel : ObservableObject
 {
     private readonly Func<string, Task> openSearch;
     private readonly Dispatcher dispatcher;
+    private readonly DispatcherTimer statsPollTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool isLoading;
 
     public MatchStatsViewModel(Func<string, Task> openSearch)
     {
         this.openSearch = openSearch;
         dispatcher = Application.Current.Dispatcher;
-        HomeViewModel.PhaseMonitor.PhaseChanged += OnPhaseChanged;
-        if (HomeViewModel.PhaseMonitor.CurrentPhase is { } phase)
-            _ = LoadForPhaseSafelyAsync(phase);
+        statsPollTimer.Tick += StatsPollTimer_Tick;
+        statsPollTimer.Start();
     }
 
     public ObservableCollection<MatchStatItemViewModel> Players { get; } = [];
 
     [ObservableProperty] public partial string StatusText { get; private set; } = "Not in a match.";
 
-    private async Task LoadSummonerStatsAsync(bool friend)
+    private async Task LoadSummonerStatsAsync(bool friendly)
     {
         if (isLoading)
             return;
 
         isLoading = true;
-        StatusText = friend ? "Loading teammates..." : "Loading enemies...";
-        Players.Clear();
-        var stats = await MatchStats.LoadAsync(friend);
-        foreach (var stat in stats)
+        try
         {
-            var item = new MatchStatItemViewModel(stat, openSearch);
-            Players.Add(item);
-            _ = item.LoadAvatarAsync();
+            StatusText = friendly ? "Loading teammates..." : "Loading enemies...";
+            var stats = await MatchStats.LoadAsync(friendly);
+            Players.Clear();
+            foreach (var stat in stats)
+            {
+                var item = new MatchStatItemViewModel(stat, openSearch);
+                Players.Add(item);
+                _ = item.LoadAvatarAsync();
+            }
+
+            StatusText = Players.Count == 0 ? "No players found for this match." : "";
         }
-
-        StatusText = Players.Count == 0 ? "No players found for this match." : "";
-        isLoading = false;
+        finally
+        {
+            isLoading = false;
+        }
     }
 
-    private async void OnPhaseChanged(object? sender, string phase)
+    private async void StatsPollTimer_Tick(object sender, EventArgs e)
     {
-        await LoadForPhaseSafelyAsync(phase);
+        await LoadCurrentPhaseSafelyAsync();
     }
 
-    private async Task LoadForPhaseSafelyAsync(string phase)
+    private async Task LoadCurrentPhaseSafelyAsync()
     {
         try
         {
+            var phase = HomeViewModel.PhaseMonitor.CurrentPhase;
+            if (phase is null)
+            {
+                Players.Clear();
+                StatusText = "Not in a match.";
+                return;
+            }
+
             await LoadForPhaseAsync(phase);
         }
         catch (Exception ex)
@@ -77,10 +91,17 @@ public partial class MatchStatsViewModel : ObservableObject
 
     private Task LoadForPhaseOnUiAsync(string phase) => phase switch
     {
-        "ChampSelect" => LoadSummonerStatsAsync(friend: true),
-        "GameStart" or "InProgress" => LoadSummonerStatsAsync(friend: false),
-        _ => Task.CompletedTask
+        "ChampSelect" => LoadSummonerStatsAsync(friendly: true),
+        "GameStart" or "InProgress" => LoadSummonerStatsAsync(friendly: false),
+        _ => ClearStatsAsync()
     };
+
+    private Task ClearStatsAsync()
+    {
+        Players.Clear();
+        StatusText = "Not in a match.";
+        return Task.CompletedTask;
+    }
 }
 
 public partial class MatchStatItemViewModel(SummonerStats stats, Func<string, Task> openSearch) : ObservableObject

@@ -33,11 +33,11 @@ public static class LcuEndPoint
     public static string Summoner(long summonerId)
         => $"lol-summoner/v1/summoners/{summonerId}";
 
-    public static string ChampSelectSession
-        => "lol-champ-select/v1/session";
+    public static string ChatConversations
+        => "lol-chat/v1/conversations";
 
-    public static string GameflowSession
-        => "lol-gameflow/v1/session";
+    public static string ChatConversationParticipants(string conversationId)
+        => $"lol-chat/v1/conversations/{Uri.EscapeDataString(conversationId)}/participants";
 
     public static string ProfileIcon(int profileIconId)
         => $"lol-game-data/assets/v1/profile-icons/{profileIconId}.jpg";

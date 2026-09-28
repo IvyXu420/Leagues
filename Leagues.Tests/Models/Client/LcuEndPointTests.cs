@@ -11,6 +11,20 @@ public class LcuEndPointTests
     }
 
     [Fact]
+    public void ChatConversations_ReturnsExpectedPath()
+    {
+        Assert.Equal("lol-chat/v1/conversations", LcuEndPoint.ChatConversations);
+    }
+
+    [Fact]
+    public void ChatConversationParticipants_EncodesConversationId()
+    {
+        Assert.Equal(
+            "lol-chat/v1/conversations/conversation%40lol-champ-select.pvp.net/participants",
+            LcuEndPoint.ChatConversationParticipants("conversation@lol-champ-select.pvp.net"));
+    }
+
+    [Fact]
     public void MatchHistory_UsesDefaultIndexes()
     {
         Assert.Equal(
