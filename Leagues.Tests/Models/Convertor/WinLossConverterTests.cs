@@ -1,5 +1,5 @@
 using System.Globalization;
-using Leagues.Models.Convertor;
+using Leagues.Convertor;
 
 namespace Leagues.Tests.Models.Convertor;
 

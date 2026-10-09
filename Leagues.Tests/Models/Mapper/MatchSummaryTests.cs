@@ -1,4 +1,4 @@
-using Leagues.Models.Mapper;
+using Leagues.Mapper;
 
 namespace Leagues.Tests.Models.Mapper;
 

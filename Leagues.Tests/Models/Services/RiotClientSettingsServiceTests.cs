@@ -1,6 +1,5 @@
 using System.IO;
-using Leagues.Models.Services;
-using Leagues.ViewModels;
+using Leagues.Services;
 
 namespace Leagues.Tests.Models.Services;
 

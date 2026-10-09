@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Leagues.Models.Dto;
+using Leagues.Dto;
 
 namespace Leagues.Tests.Models.Dto;
 
@@ -61,7 +61,7 @@ public class MatchHistoryDtoJsonTests
                             }
                             """;
 
-        var response = System.Text.Json.JsonSerializer.Deserialize<MatchHistoryResponse>(json)!;
+        var response = JsonSerializer.Deserialize<MatchHistoryResponse>(json)!;
         var game = Assert.Single(response.Games.Games);
         var participant = Assert.Single(game.Participants);
         var identity = Assert.Single(game.ParticipantIdentities);
@@ -92,7 +92,7 @@ public class MatchHistoryDtoJsonTests
     [Fact]
     public void Deserialize_EmptyObjectPreservesCollectionDefaults()
     {
-        var response = System.Text.Json.JsonSerializer.Deserialize<MatchHistoryResponse>("{}")!;
+        var response = JsonSerializer.Deserialize<MatchHistoryResponse>("{}")!;
 
         Assert.NotNull(response.Games);
         Assert.Empty(response.Games.Games);

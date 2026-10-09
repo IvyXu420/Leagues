@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Windows.Media;
-using Leagues.Models.Convertor;
+using Leagues.Convertor;
 
 namespace Leagues.Tests.Models.Convertor;
 

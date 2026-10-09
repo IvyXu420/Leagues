@@ -5,9 +5,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Leagues.Models.Client;
-using Leagues.Models.Services;
-using static Leagues.Models.Client.LcuConnection;
+using Leagues.Client;
+using Leagues.Services;
+using static Leagues.Client.LcuConnection;
 
 namespace Leagues.ViewModels;
 
@@ -39,7 +39,7 @@ public partial class MatchStatsViewModel : ObservableObject
         try
         {
             StatusText = friendly ? "Loading teammates..." : "Loading enemies...";
-            var stats = await MatchStats.LoadAsync(friendly);
+            var stats = await ParticipantsStats.LoadAsync(friendly);
             Players.Clear();
             foreach (var stat in stats)
             {

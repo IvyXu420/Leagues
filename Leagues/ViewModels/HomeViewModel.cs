@@ -3,10 +3,10 @@ using System.Windows;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Leagues.Models.Client;
-using Leagues.Models.Services;
-using Leagues.Models.Utils;
-using static Leagues.Models.Logging.Logging;
+using Leagues.Client;
+using Leagues.Services;
+using Leagues.Utils;
+using static Leagues.Logging.Logging;
 
 namespace Leagues.ViewModels;
 

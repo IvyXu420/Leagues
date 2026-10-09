@@ -1,7 +1,7 @@
 using System.Windows.Input;
-using Leagues.Models.Mapper;
+using Leagues.Mapper;
 using Leagues.ViewModels;
-using static Leagues.Models.Logging.Logging;
+using static Leagues.Logging.Logging;
 
 namespace Leagues.Views;
 
