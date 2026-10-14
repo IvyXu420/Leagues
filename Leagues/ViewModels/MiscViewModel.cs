@@ -10,6 +10,8 @@ public partial class MiscViewModel : ObservableObject
 
     [ObservableProperty] public partial string SelectedLanguage { get; set; }
 
+    // FIXME: The Tencent Client only supports these two language by default.
+    // Doesn't seem to be the case for the Riot Client.
     public ObservableCollection<string> AvailableLanguages { get; } =
     [
         "zh_CN",

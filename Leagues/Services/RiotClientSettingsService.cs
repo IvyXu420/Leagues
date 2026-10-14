@@ -47,6 +47,8 @@ public sealed class RiotClientSettingsService(string? settingPath = null)
         return yaml;
     }
 
+    // Only have been tested under the Tencent version.
+    // FIXME: Does this work under the Riot Client version?
     private static YamlScalarNode? GetLocaleNode(YamlStream yaml)
     {
         if (yaml.Documents.Count == 0 ||
@@ -57,7 +59,7 @@ public sealed class RiotClientSettingsService(string? settingPath = null)
         if (installNode is not YamlMappingNode install)
             return null;
 
-        install.Children.TryGetValue("globals", out var globalsNode);
+        install.Children.TryGetValue("localization", out var globalsNode);
         if (globalsNode is not YamlMappingNode globals)
             return null;
 
