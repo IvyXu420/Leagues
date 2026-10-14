@@ -10,7 +10,7 @@ public class RiotClientSettingsServiceTests
     {
         var settingsPath = Path.Combine(Path.GetTempPath(), $"RiotClientSettings-{Guid.NewGuid():N}.yaml");
         File.WriteAllText(settingsPath,
-            "install:\n    globals:\n        locale: \"zh_CN\"\n        region: \"TENCENT\"\n");
+            "install:\n    localization:\n        locale: \"zh_CN\"\n        region: \"TENCENT\"\n");
 
         try
         {
