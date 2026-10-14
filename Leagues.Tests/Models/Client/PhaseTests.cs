@@ -1,4 +1,4 @@
-using Leagues.Models.Client;
+using Leagues.Client;
 
 namespace Leagues.Tests.Models.Client;
 

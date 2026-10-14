@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Leagues.Models.Services;
+using Leagues.Services;
 
 namespace Leagues.ViewModels;
 

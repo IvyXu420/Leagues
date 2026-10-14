@@ -1,4 +1,4 @@
-using Leagues.Models.Client;
+using Leagues.Client;
 
 namespace Leagues.Tests.Models.Client;
 
@@ -8,6 +8,20 @@ public class LcuEndPointTests
     public void CurrentSummoner_ReturnsExpectedPath()
     {
         Assert.Equal("lol-summoner/v1/current-summoner", LcuEndPoint.CurrentSummoner);
+    }
+
+    [Fact]
+    public void ChatConversations_ReturnsExpectedPath()
+    {
+        Assert.Equal("lol-chat/v1/conversations", LcuEndPoint.ChatConversations);
+    }
+
+    [Fact]
+    public void ChatConversationParticipants_EncodesConversationId()
+    {
+        Assert.Equal(
+            "lol-chat/v1/conversations/conversation%40lol-champ-select.pvp.net/participants",
+            LcuEndPoint.ChatConversationParticipants("conversation@lol-champ-select.pvp.net"));
     }
 
     [Fact]

@@ -33,6 +33,10 @@
     <PackageReference Include="System.Management" Version="10.0.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\"/>
+  </ItemGroup>
+
   <Target Name="RemoveExeConfig" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
     <Delete Files="$(TargetDir)$(TargetName).exe.config"/>
   </Target>
