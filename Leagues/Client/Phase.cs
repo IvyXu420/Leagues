@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using static Leagues.Client.LcuConnection;
 
 namespace Leagues.Client;
 
@@ -40,6 +41,7 @@ public sealed class Phase : IAsyncDisposable
             var monitoredSocket = (ClientWebSocket)await LcuConnectionFactory.CreateWebSocketAsync();
             socket = monitoredSocket;
             await SubscribeAsync(monitoredSocket, token);
+            await InitializePhaseAsync(token);
 
             monitorTask = Task.Run(() => ReceiveLoopAsync(monitoredSocket, token), token);
             return true;
@@ -58,6 +60,31 @@ public sealed class Phase : IAsyncDisposable
         await monitoredSocket.SendAsync(new ArraySegment<byte>(subscriptionMessage.ToArray()),
             WebSocketMessageType.Text, true,
             token);
+    }
+
+    private async Task InitializePhaseAsync(CancellationToken token)
+    {
+        try
+        {
+            using var response = await LcuHttpClient.GetAsync(LcuEndPoint.GameflowPhase, token);
+            if (!response.IsSuccessStatusCode)
+                return;
+
+            var payload = await response.Content.ReadAsStringAsync();
+            var phase = JsonSerializer.Deserialize<string>(payload);
+            if (phase is null || string.IsNullOrWhiteSpace(phase))
+                return;
+
+            lastPhase = phase;
+            PhaseChanged?.Invoke(this, phase);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            MonitorError?.Invoke(this, $"Phase bootstrap failed: {ex.Message}");
+        }
     }
 
     private async Task ReceiveLoopAsync(ClientWebSocket monitoredSocket, CancellationToken token)

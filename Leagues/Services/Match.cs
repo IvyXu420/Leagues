@@ -43,7 +43,7 @@ public static class Match
     /// <param name="endIndex"></param>
     public static async Task<string?> QueryAsync(string playerId, int begIndex, int endIndex)
     {
-        var playerUuid = await Uuid.FetchPlayerUuid(playerId);
+        var playerUuid = await Uuid.FetchPlayerUuidAsync(playerId);
         if (playerUuid == null)
             return null;
 
@@ -51,7 +51,10 @@ public static class Match
         if (response.IsSuccessStatusCode)
             return await response.Content.ReadAsStringAsync();
 
-        Logger.Error($"Failed to query match history for player {playerId}: {response.ReasonPhrase}");
+        var error = await response.Content.ReadAsStringAsync();
+        Logger.Error(
+            $"Failed to query match history for player {playerId}: {(int)response.StatusCode} " +
+            $"{response.ReasonPhrase}. {error}");
         return null;
     }
 }

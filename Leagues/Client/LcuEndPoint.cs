@@ -30,8 +30,11 @@ public static class LcuEndPoint
     public static string CurrentSummoner
         => "lol-summoner/v1/current-summoner";
 
-    public static string Summoner(long summonerId)
-        => $"lol-summoner/v1/summoners/{summonerId}";
+    public static string GameflowPhase
+        => "lol-gameflow/v1/gameflow-phase";
+
+    public static string SummonerOverView(string puuid)
+        => $"lol-summoner/v2/summoners/puuid/{Uri.EscapeDataString(puuid)}";
 
     public static string ChatConversations
         => "lol-chat/v1/conversations";
@@ -50,4 +53,7 @@ public static class LcuEndPoint
 
     public static string ChampionAvatar(int championId)
         => $"lol-game-data/assets/v1/champion-icons/{championId}.png";
+
+    public static string LiveClientDataPlayerList()
+        => "https://127.0.0.1:2999/liveclientdata/playerlist";
 }

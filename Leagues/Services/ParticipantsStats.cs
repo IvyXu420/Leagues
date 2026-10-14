@@ -6,38 +6,31 @@ using static Leagues.Logging.Logging;
 
 namespace Leagues.Services;
 
-// TODO: simplify the code according to the actual JSON response
-// session part seems like hallucination
-
-public sealed class SummonerStats(
-    long summonerId,
+public sealed class ParticipantStats(
     string playerName,
     int summonerLevel,
     int profileIconId,
     double kda,
-    double winRate,
-    string puuid)
+    double winRate
+    )
 {
-    public long SummonerId { get; } = summonerId;
     public string PlayerName { get; } = playerName;
     public int SummonerLevel { get; } = summonerLevel;
     public int ProfileIconId { get; } = profileIconId;
     public double Kda { get; } = kda;
     public double WinRate { get; } = winRate;
-    public string Puuid { get; } = puuid;
 }
 
 public static class ParticipantsStats
 {
-    public static async Task<IReadOnlyList<SummonerStats>> LoadAsync(bool friends,
+    public static async Task<IReadOnlyList<ParticipantStats>> LoadAsync(bool friendly,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            if (friends)
-                return await LoadChampSelectStatsAsync(cancellationToken);
-            else
-                return [];
+            if (friendly)
+                return await LoadStatsChampSelectAsync(cancellationToken);
+            return await LoadStatsLiveDataAsync(cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -46,7 +39,25 @@ public static class ParticipantsStats
         }
     }
 
-    private static async Task<IReadOnlyList<SummonerStats>> LoadChampSelectStatsAsync(
+    private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsLiveDataAsync
+        (CancellationToken cancellationToken)
+    {
+        if (!Credential.TryGetCredentials(out var credentials))
+            return [];
+
+        using var client = LcuConnectionFactory.CreateHttpClient(LcuEndPoint.LiveClientDataPlayerList(), credentials);
+        using var response = await client.GetAsync(LcuEndPoint.LiveClientDataPlayerList(), cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        var stats = await Task.WhenAll(document.RootElement.EnumerateArray()
+            .Select(participant => ParseLiveDataParticipantAsync(participant, cancellationToken)));
+        return [.. stats.OfType<ParticipantStats>()];
+    }
+
+    private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsChampSelectAsync(
         CancellationToken cancellationToken)
     {
         using var conversationsResponse = await LcuHttpClient.GetAsync(
@@ -68,14 +79,13 @@ public static class ParticipantsStats
         using var participants = await JsonDocument.ParseAsync(participantsStream,
             cancellationToken: cancellationToken);
         var stats = await Task.WhenAll(participants.RootElement.EnumerateArray()
-            .Select(participant => LoadChatParticipantAsync(participant, cancellationToken)));
-        return [.. stats.OfType<SummonerStats>()];
+            .Select(participant => ParseChatParticipantAsync(participant, cancellationToken)));
+        return [.. stats.OfType<ParticipantStats>()];
     }
 
-    private static async Task<SummonerStats?> LoadChatParticipantAsync(JsonElement participant,
+    private static async Task<ParticipantStats?> ParseChatParticipantAsync(JsonElement participant,
         CancellationToken cancellationToken)
     {
-        var summonerId = participant.GetProperty("summonerId").GetInt64();
         var puuid = participant.GetProperty("puuid").GetString()!;
 
         var playerName = participant.GetProperty("gameName").GetString()!;
@@ -84,19 +94,61 @@ public static class ParticipantsStats
             playerName = $"{playerName}#{tagLine}";
 
         var lol = participant.GetProperty("lol");
-        var summonerLevel = lol.GetProperty("level").GetInt32();
+        int.TryParse(lol.GetProperty("level").GetString()!, out var level);
         var profileIconId = participant.GetProperty("icon").GetInt32();
-        return await LoadHistoryStatsAsync(participant, summonerId, playerName, puuid, summonerLevel,
+        return await CreateSummonerStatsAsync(playerName, puuid, level,
             profileIconId, cancellationToken);
     }
 
-    private static async Task<SummonerStats> LoadHistoryStatsAsync(JsonElement profile, long summonerId,
+    private static async Task<ParticipantStats?> ParseLiveDataParticipantAsync(JsonElement participant,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var playerName = participant.GetProperty("summonerName").GetString() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(playerName))
+                return null;
+
+            var puuid = await Uuid.FetchPlayerUuidAsync(playerName);
+            if (puuid == null)
+                return null;
+
+            using var response = await LcuHttpClient.GetAsync(
+                LcuEndPoint.SummonerOverView(puuid), cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Warn($"Summoner overview failed for {playerName}: " +
+                    $"{(int)response.StatusCode} {response.ReasonPhrase}");
+                return null;
+            }
+
+            using var stream = await response.Content.ReadAsStreamAsync();
+            var overview = await JsonSerializer.DeserializeAsync<LiveClientPlayerListDto>(
+                stream, cancellationToken: cancellationToken);
+            if (overview is null)
+                return null;
+
+            return await CreateSummonerStatsAsync(playerName, puuid, overview.SummonerLevel,
+                overview.ProfileIconId, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Failed to load one live participant: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static async Task<ParticipantStats> CreateSummonerStatsAsync(
         string playerName, string puuid, int summonerLevel, int profileIconId,
         CancellationToken cancellationToken)
     {
         var historyResponse = await LcuHttpClient.GetAsync(LcuEndPoint.MatchHistory(puuid), cancellationToken);
         if (!historyResponse.IsSuccessStatusCode)
-            return CreateStats(summonerLevel, profileIconId, summonerId, playerName, puuid, 0, 0);
+            return new(playerName, summonerLevel, profileIconId, 0, 0);
 
         using var historyStream = await historyResponse.Content.ReadAsStreamAsync();
         var history = await JsonSerializer.DeserializeAsync<MatchHistoryResponse>(historyStream,
@@ -109,11 +161,7 @@ public static class ParticipantsStats
         var deaths = playerGames.Sum(static game => game.Stats.Deaths);
         var assists = playerGames.Sum(static game => game.Stats.Assists);
         var kda = deaths == 0 ? kills + assists : (double)(kills + assists) / deaths;
-        return CreateStats(summonerLevel, profileIconId, summonerId, playerName, puuid, kda,
+        return new(playerName, summonerLevel, profileIconId, kda,
             gameCount == 0 ? 0 : (double)wins / gameCount * 100);
     }
-
-    private static SummonerStats CreateStats(int summonerLevel, int profileIconId, long summonerId, string name,
-        string puuid, double kda, double winRate)
-        => new(summonerId, name, summonerLevel, profileIconId, kda, winRate, puuid);
 }

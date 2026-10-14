@@ -37,7 +37,7 @@ public static class MatchMapper
         if (json == null)
             return null;
 
-        var playerUuid = await Uuid.FetchPlayerUuid(playerName);
+        var playerUuid = await Uuid.FetchPlayerUuidAsync(playerName);
         if (playerUuid == null)
             return null;
 

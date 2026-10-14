@@ -26,7 +26,7 @@ public static class LcuConnection
                     return _httpClient;
 
                 _httpClient?.Dispose();
-                _httpClient = LcuConnectionFactory.CreateHttpClient(credentials);
+                _httpClient = LcuConnectionFactory.CreateHttpClient(null, credentials);
                 _activeCredentials = credentials;
                 return _httpClient;
             }
@@ -36,15 +36,17 @@ public static class LcuConnection
 
 internal static class LcuConnectionFactory
 {
-    public static HttpClient CreateHttpClient(ClientCredentials credentials)
+    public static HttpClient CreateHttpClient(string? url, ClientCredentials credentials)
     {
         var handler = new HttpClientHandler
         {
+            UseProxy = false,
             ServerCertificateCustomValidationCallback =
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         };
+        url ??= $"https://127.0.0.1:{credentials.Port}/";
 
-        var client = new HttpClient(handler) { BaseAddress = new Uri($"https://127.0.0.1:{credentials.Port}/") };
+        var client = new HttpClient(handler) { BaseAddress = new Uri(url) };
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "Basic",
             Convert.ToBase64String(Encoding.ASCII.GetBytes($"riot:{credentials.Token}")));

@@ -13,31 +13,33 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="{Binding StatusText}"
-                   Style="{StaticResource MaterialDesignBodyLargeTextBlock}"
+        <TextBlock Grid.Row="1" Text="{Binding StatusText}"
+                   Style="{StaticResource MaterialDesignDisplayLargeTextBlock}"
                    HorizontalAlignment="Center"
-                   Margin="0,8,0,16" />
+                   VerticalAlignment="Center"
+                  />
         <ListBox Grid.Row="1" ItemsSource="{Binding Players}"
                  BorderThickness="0"
                  HorizontalContentAlignment="Stretch">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type viewModels:MatchStatItemViewModel}">
-                    <materialDesign:Card Margin="0,3" Padding="8">
+                    <materialDesign:Card Margin="0,3" Padding="8" Cursor="Hand"
+                                         ToolTip="Open Match History">
+                    <materialDesign:Card.InputBindings>
+                        <MouseBinding MouseAction="LeftClick"
+                                      Command="{Binding OpenSearchCommand}" />
+                    </materialDesign:Card.InputBindings>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Width="52" Height="52" Padding="0"
-                                    Command="{Binding OpenSearchCommand}"
-                                    ToolTip="Open match history">
-                                <Ellipse>
-                                    <Ellipse.Fill>
-                                        <ImageBrush ImageSource="{Binding Avatar}" />
-                                    </Ellipse.Fill>
-                                </Ellipse>
-                            </Button>
+                            <Ellipse Grid.Column="0" Width="52" Height="52">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="{Binding Avatar}" Stretch="UniformToFill" />
+                                </Ellipse.Fill>
+                            </Ellipse>
                             <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Stats.PlayerName}"
                                            Style="{StaticResource MaterialDesignSubtitle1TextBlock}" />

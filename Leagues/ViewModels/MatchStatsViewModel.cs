@@ -17,7 +17,7 @@ public partial class MatchStatsViewModel : ObservableObject
     private readonly Dispatcher dispatcher;
     private readonly DispatcherTimer statsPollTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool isLoading;
-
+    private bool? loaded;
     public MatchStatsViewModel(Func<string, Task> openSearch)
     {
         this.openSearch = openSearch;
@@ -32,13 +32,12 @@ public partial class MatchStatsViewModel : ObservableObject
 
     private async Task LoadSummonerStatsAsync(bool friendly)
     {
-        if (isLoading)
+        if (isLoading || loaded == friendly)
             return;
 
         isLoading = true;
         try
         {
-            StatusText = friendly ? "Loading teammates..." : "Loading enemies...";
             var stats = await ParticipantsStats.LoadAsync(friendly);
             Players.Clear();
             foreach (var stat in stats)
@@ -48,7 +47,13 @@ public partial class MatchStatsViewModel : ObservableObject
                 _ = item.LoadAvatarAsync();
             }
 
-            StatusText = Players.Count == 0 ? "No players found for this match." : "";
+            if (Players.Count == 0)
+                StatusText = "No players found for this match.";
+            else
+            {
+                StatusText = string.Empty;
+                loaded = friendly;
+            }
         }
         finally
         {
@@ -68,8 +73,7 @@ public partial class MatchStatsViewModel : ObservableObject
             var phase = HomeViewModel.PhaseMonitor.CurrentPhase;
             if (phase is null)
             {
-                Players.Clear();
-                StatusText = "Not in a match.";
+                await ClearStatsAsync();
                 return;
             }
 
@@ -83,10 +87,7 @@ public partial class MatchStatsViewModel : ObservableObject
 
     private Task LoadForPhaseAsync(string phase)
     {
-        if (dispatcher.CheckAccess())
-            return LoadForPhaseOnUiAsync(phase);
-
-        return dispatcher.InvokeAsync(() => LoadForPhaseOnUiAsync(phase)).Task.Unwrap();
+        return dispatcher.CheckAccess() ? LoadForPhaseOnUiAsync(phase) : dispatcher.InvokeAsync(() => LoadForPhaseOnUiAsync(phase)).Task.Unwrap();
     }
 
     private Task LoadForPhaseOnUiAsync(string phase) => phase switch
@@ -100,13 +101,14 @@ public partial class MatchStatsViewModel : ObservableObject
     {
         Players.Clear();
         StatusText = "Not in a match.";
+        loaded = null;
         return Task.CompletedTask;
     }
 }
 
-public partial class MatchStatItemViewModel(SummonerStats stats, Func<string, Task> openSearch) : ObservableObject
+public partial class MatchStatItemViewModel(ParticipantStats stats, Func<string, Task> openSearch) : ObservableObject
 {
-    public SummonerStats Stats { get; } = stats;
+    public ParticipantStats Stats { get; } = stats;
 
     [ObservableProperty] public partial BitmapImage? Avatar { get; private set; }
 
@@ -115,21 +117,14 @@ public partial class MatchStatItemViewModel(SummonerStats stats, Func<string, Ta
 
     public async Task LoadAvatarAsync()
     {
-        try
-        {
-            var bytes = await LcuHttpClient.GetByteArrayAsync(LcuEndPoint.ProfileIcon(Stats.ProfileIconId));
-            using var stream = new MemoryStream(bytes);
-            var avatar = new BitmapImage();
-            avatar.BeginInit();
-            avatar.CacheOption = BitmapCacheOption.OnLoad;
-            avatar.StreamSource = stream;
-            avatar.EndInit();
-            avatar.Freeze();
-            Avatar = avatar;
-        }
-        catch
-        {
-            Avatar = null;
-        }
+        var bytes = await LcuHttpClient.GetByteArrayAsync(LcuEndPoint.ProfileIcon(Stats.ProfileIconId));
+        using var stream = new MemoryStream(bytes);
+        var avatar = new BitmapImage();
+        avatar.BeginInit();
+        avatar.CacheOption = BitmapCacheOption.OnLoad;
+        avatar.StreamSource = stream;
+        avatar.EndInit();
+        avatar.Freeze();
+        Avatar = avatar;
     }
 }
