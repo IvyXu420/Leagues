@@ -23,8 +23,7 @@
                  HorizontalContentAlignment="Stretch">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type viewModels:MatchStatItemViewModel}">
-                    <materialDesign:Card Margin="0,3" Padding="8" Cursor="Hand"
-                                         ToolTip="Open Match History">
+                    <materialDesign:Card Margin="0,5" Padding="8" Cursor="Hand">
                     <materialDesign:Card.InputBindings>
                         <MouseBinding MouseAction="LeftClick"
                                       Command="{Binding OpenSearchCommand}" />
