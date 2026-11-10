@@ -30,21 +30,21 @@ public partial class MatchStatsViewModel : ObservableObject
 
     [ObservableProperty] public partial string StatusText { get; private set; } = "Not in a match.";
 
-    private async Task LoadSummonerStatsAsync(bool friendly)
+    private async Task LoadSummonerStatsAsync(bool ingame)
     {
-        if (isLoading || loaded == friendly)
+        if (isLoading || loaded == ingame)
             return;
 
         isLoading = true;
         try
         {
-            var stats = await ParticipantsStats.LoadAsync(friendly);
+            var stats = await ParticipantsStats.LoadAsync(ingame);
             Players.Clear();
             foreach (var stat in stats)
             {
                 var item = new MatchStatItemViewModel(stat, openSearch);
                 Players.Add(item);
-                _ = item.LoadAvatarAsync();
+                _ = item.LoadAvatarAsync(ingame);
             }
 
             if (Players.Count == 0)
@@ -52,7 +52,7 @@ public partial class MatchStatsViewModel : ObservableObject
             else
             {
                 StatusText = string.Empty;
-                loaded = friendly;
+                loaded = ingame;
             }
         }
         finally
@@ -92,8 +92,8 @@ public partial class MatchStatsViewModel : ObservableObject
 
     private Task LoadForPhaseOnUiAsync(string phase) => phase switch
     {
-        "ChampSelect" => LoadSummonerStatsAsync(friendly: true),
-        "GameStart" or "InProgress" => LoadSummonerStatsAsync(friendly: false),
+        "ChampSelect" => LoadSummonerStatsAsync(ingame: false),
+        "GameStart" or "InProgress" => LoadSummonerStatsAsync(ingame: true),
         _ => ClearStatsAsync()
     };
 
@@ -115,9 +115,15 @@ public partial class MatchStatItemViewModel(ParticipantStats stats, Func<string,
     [RelayCommand]
     private Task OpenSearch() => openSearch(Stats.PlayerName);
 
-    public async Task LoadAvatarAsync()
+    /// <summary>
+    /// Load champion avatar during the in-game phase;
+    /// load summoner avatar during the champion-select phase.
+    /// </summary>
+    /// <returns></returns>
+    public async Task LoadAvatarAsync(bool ingame)
     {
-        var bytes = await LcuHttpClient.GetByteArrayAsync(LcuEndPoint.ProfileIcon(Stats.ProfileIconId));
+        var endpoint = ingame ? LcuEndPoint.ChampionAvatar(Stats.AvatarIconId) : LcuEndPoint.ProfileIcon(Stats.AvatarIconId);
+        var bytes = await LcuHttpClient.GetByteArrayAsync(endpoint);
         using var stream = new MemoryStream(bytes);
         var avatar = new BitmapImage();
         avatar.BeginInit();

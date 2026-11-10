@@ -51,8 +51,12 @@ public static class LcuEndPoint
     public static string GameDetails(long gameId)
         => $"lol-match-history/v1/games/{gameId}";
 
+    // FIXME: This seems like to return very legacy avatars.
     public static string ChampionAvatar(int championId)
         => $"lol-game-data/assets/v1/champion-icons/{championId}.png";
+
+    public static string ChampionSummary
+        => "lol-game-data/assets/v1/champion-summary.json";
 
     public static string LiveClientDataPlayerList()
         => "https://127.0.0.1:2999/liveclientdata/playerlist";
