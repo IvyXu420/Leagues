@@ -65,12 +65,7 @@ public sealed class Phase : IAsyncDisposable
     {
         try
         {
-            using var response = await LcuNet.Client.GetAsync(LcuEndPoint.GameflowPhase, token);
-            if (!response.IsSuccessStatusCode)
-                return;
-
-            var payload = await response.Content.ReadAsStringAsync();
-            var phase = JsonSerializer.Deserialize<string>(payload);
+            var phase = await LcuNet.GetJsonAsync<string>(LcuEndPoint.GameflowPhase, token);
             if (phase is null || string.IsNullOrWhiteSpace(phase))
                 return;
 

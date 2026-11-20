@@ -1,8 +1,7 @@
-using System.Text.Json;
 using Leagues.Client;
+using Leagues.Dto;
 using Leagues.Dto.MatchHistory;
 using Leagues.Models;
-using Leagues.Services;
 
 namespace Leagues.Mappers;
 
@@ -12,18 +11,20 @@ public static class MatchMapper
 
     public static async Task<List<MatchSummary>?> ToSummaries(string playerName, int begIndex, int endIndex)
     {
-        var json = await MatchService.QueryAsync(playerName, begIndex, endIndex);
-        if (json == null)
+        // Fetch PUUID to cache the result.
+        var summoner = await LcuNet.GetJsonAsync<SummonerDto>(
+            LcuEndPoint.Summoner(playerName));
+        if (summoner is null)
             return null;
 
-        var playerUuid = await Uuid.FetchPlayerUuidAsync(playerName);
-        if (playerUuid == null)
-            return null;
-
-        if (Cache.TryGetValue(playerUuid, out var res))
+        if (Cache.TryGetValue(summoner.Puuid, out var res))
             return res;
 
-        var history = JsonSerializer.Deserialize<MatchHistoryDto>(json);
+        // Not in the cache, then fetch them from the LCU API.
+        var history = await LcuNet.GetJsonAsync<MatchHistoryDto>(LcuEndPoint.MatchHistory(playerName, begIndex, endIndex));
+        if (history is null)
+            return null;
+
         var summaries = history!.Games.Games
             .Select(game =>
             {
@@ -40,7 +41,7 @@ public static class MatchMapper
                     assists: participant.Stats.Assists);
             })
             .ToList();
-        Cache.Add(playerUuid, summaries);
+        Cache.Add(summoner.Puuid, summaries);
         return summaries;
     }
 }

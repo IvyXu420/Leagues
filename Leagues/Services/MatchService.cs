@@ -32,29 +32,4 @@ public static class MatchService
             return false;
         }
     }
-
-    /// <summary>
-    /// Query the match history of a player using their player ID
-    /// and the specified range of matches (begIndex to endIndex).
-    /// </summary>
-    /// <param name="playerId"></param>
-    /// <param name="begIndex"></param>
-    /// <param name="endIndex"></param>
-    public static async Task<string?> QueryAsync(string playerId, int begIndex, int endIndex)
-    {
-        var playerUuid = await Uuid.FetchPlayerUuidAsync(playerId);
-        if (playerUuid == null)
-            return null;
-
-        var response = await LcuNet.Client.GetAsync(
-            LcuEndPoint.MatchHistory(playerUuid, begIndex, endIndex));
-        if (response.IsSuccessStatusCode)
-            return await response.Content.ReadAsStringAsync();
-
-        var error = await response.Content.ReadAsStringAsync();
-        Logger.Error(
-            $"Failed to query match history for player {playerId}: {(int)response.StatusCode} " +
-            $"{response.ReasonPhrase}. {error}");
-        return null;
-    }
 }

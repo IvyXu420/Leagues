@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Leagues.Client;
 using Leagues.Dto;
 
@@ -14,14 +13,14 @@ public static class ChampionIdsMapService
         if (championIds is not null)
             return championIds;
 
-        using var response = await LcuNet.Client.GetAsync(
-            LcuEndPoint.ChampionSummary, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        using var stream = await response.Content.ReadAsStreamAsync();
-        var champions = await JsonSerializer.DeserializeAsync<List<ChampionSummaryDto>>(
-            stream, cancellationToken: cancellationToken) ?? [];
+        var champions = await LcuNet.GetJsonAsync<List<ChampionSummaryDto>>(
+            LcuEndPoint.ChampionSummary, cancellationToken
+        );
         var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        if (champions is null)
+            return result;
+
         foreach (var champion in champions)
         {
             if (!string.IsNullOrWhiteSpace(champion.Name))

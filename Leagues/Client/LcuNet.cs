@@ -3,6 +3,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using Leagues.Logging;
 using Leagues.Utils;
 
 namespace Leagues.Client;
@@ -47,6 +49,31 @@ public static class LcuNet
             return field;
         }
     }
+
+    public static async Task<T?> GetJsonAsync<T>(string endpoint,
+                    CancellationToken cancellationToken = default)
+    {
+        return await GetJsonAsync<T>(Client, endpoint, cancellationToken);
+    }
+
+    public static async Task<T?> GetJsonAsync<T>(
+        HttpClient client,
+        string endpoint,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await client.GetAsync(endpoint, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            Logger.Warn($"GET {endpoint} failed: {(int)response.StatusCode} " +
+                response.ReasonPhrase);
+            return default;
+        }
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+        return await JsonSerializer.DeserializeAsync<T>(
+            stream, cancellationToken: cancellationToken);
+    }
+
     private static ClientWebSocket? webSocket;
     public async static Task<ClientWebSocket> GetWebSocket()
     {

@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Leagues.Client;
 using Leagues.Dto;
 using Leagues.Dto.Chat;
@@ -30,56 +29,34 @@ public static class ParticipantStatsService
     private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsLiveDataAsync
         (CancellationToken cancellationToken)
     {
-        using var response = await LcuNet.Client.GetAsync(
-            LcuEndPoint.LiveClientDataPlayerList(), cancellationToken);
-        if (!response.IsSuccessStatusCode)
-            return [];
+        var participants = await LcuNet.GetJsonAsync<List<LiveDataParticipantDto>>(
+            LcuNet.LiveClient, LcuEndPoint.LiveClientDataPlayerList(), cancellationToken
+        ) ?? [];
 
-        using var stream = await response.Content.ReadAsStreamAsync();
-        var participants = await JsonSerializer.DeserializeAsync<List<LiveDataParticipantDto>>(
-            stream, cancellationToken: cancellationToken) ?? [];
         var championIdMap = await ChampionIdsMapService.GetMapAsync(cancellationToken);
         var stats = await Task.WhenAll(participants
             .Select(participant => ParseLiveDataParticipantAsync(
-                participant, championIdMap, cancellationToken)));
+                participant, cancellationToken)));
         return [.. stats.OfType<ParticipantStats>()];
     }
 
-    /// <summary>
-    /// Load participants' stats during the select phase.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsChampSelectAsync(
         CancellationToken cancellationToken)
     {
-        using var conversationsResponse = await LcuNet.Client.GetAsync(
+        var conversations = await LcuNet.GetJsonAsync<List<ChatConversationDto>>(
             LcuEndPoint.ChatConversations, cancellationToken);
-        if (!conversationsResponse.IsSuccessStatusCode)
-            return [];
-        using var conversationsStream = await conversationsResponse.Content.ReadAsStreamAsync();
-        using var conversations = await JsonDocument.ParseAsync(conversationsStream,
-            cancellationToken: cancellationToken);
-        if (conversations.RootElement.ValueKind != JsonValueKind.Array ||
-            conversations.RootElement.GetArrayLength() == 0 ||
-            !conversations.RootElement[0].TryGetProperty("id", out var conversationIdElement) ||
-            conversationIdElement.ValueKind != JsonValueKind.String)
+        if (conversations is null || conversations.Count == 0)
         {
             Logger.Warn("No chat conversation is available for champion select.");
             return [];
         }
 
-        var conversationId = conversationIdElement.GetString();
+        var conversationId = conversations[0].Id;
         if (string.IsNullOrWhiteSpace(conversationId))
             return [];
 
-        using var participantsResponse = await LcuNet.Client.GetAsync(
-            LcuEndPoint.ChatConversationParticipants(conversationId!), cancellationToken);
-        if (!participantsResponse.IsSuccessStatusCode)
-            return [];
-        using var participantsStream = await participantsResponse.Content.ReadAsStreamAsync();
-        var participants = await JsonSerializer.DeserializeAsync<List<ChatParticipantDto>>(
-            participantsStream, cancellationToken: cancellationToken) ?? [];
+        var participants = await LcuNet.GetJsonAsync<List<ChatParticipantDto>>(
+            LcuEndPoint.ChatConversationParticipants(conversationId), cancellationToken) ?? [];
         var stats = await Task.WhenAll(participants
             .Select(participant => ParseChatParticipantAsync(participant, cancellationToken)));
         return [.. stats.OfType<ParticipantStats>()];
@@ -102,28 +79,26 @@ public static class ParticipantStatsService
 
     private static async Task<ParticipantStats?> ParseLiveDataParticipantAsync(
         LiveDataParticipantDto participant,
-        IReadOnlyDictionary<string, int> championIdMap,
         CancellationToken cancellationToken)
     {
         try
         {
             var playerName = participant.SummonerName;
             var championName = participant.ChampionName;
+            // Render the champion avatar in-game.
+            var championIdMap = await ChampionIdsMapService.GetMapAsync(cancellationToken);
             if (string.IsNullOrWhiteSpace(playerName) ||
                 !championIdMap.TryGetValue(championName, out var championId))
                 return null;
 
-            var puuid = await Uuid.FetchPlayerUuidAsync(playerName);
-            if (puuid == null)
+            var summoner = await LcuNet.GetJsonAsync<SummonerDto>(
+                LcuEndPoint.Summoner(playerName), cancellationToken);
+            if (summoner == null)
                 return null;
+            var puuid = summoner.Puuid;
 
-            using var overviewResponse = await LcuNet.Client.GetAsync(
+            var overview = await LcuNet.GetJsonAsync<SummonerDto>(
                 LcuEndPoint.SummonerOverView(puuid), cancellationToken);
-            if (!overviewResponse.IsSuccessStatusCode)
-                return null;
-            using var overviewStream = await overviewResponse.Content.ReadAsStreamAsync();
-            var overview = await JsonSerializer.DeserializeAsync<SummonerDto>(
-                overviewStream, cancellationToken: cancellationToken);
             if (overview is null)
                 return null;
 
@@ -145,13 +120,7 @@ public static class ParticipantStatsService
         string playerName, string puuid, int summonerLevel, int avatarIconId,
         CancellationToken cancellationToken)
     {
-        using var historyResponse = await LcuNet.Client.GetAsync(
-            LcuEndPoint.MatchHistory(puuid), cancellationToken);
-        if (!historyResponse.IsSuccessStatusCode)
-            return new(playerName, summonerLevel, avatarIconId, 0, 0);
-        using var historyStream = await historyResponse.Content.ReadAsStreamAsync();
-        var history = await JsonSerializer.DeserializeAsync<MatchHistoryDto>(
-            historyStream, cancellationToken: cancellationToken);
+        var history = await LcuNet.GetJsonAsync<MatchHistoryDto>(LcuEndPoint.MatchHistory(puuid), cancellationToken);
         var games = history?.Games.Games ?? [];
         var playerGames = games.SelectMany(static game => game.Participants).ToList();
         var gameCount = playerGames.Count;
