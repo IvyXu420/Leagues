@@ -9,7 +9,7 @@ public static class ChampionMapper
     public static async Task<BitmapImage> ChampionIdToImage(int championId)
     {
         var avatarUrl = LcuEndPoint.ChampionAvatar(championId);
-        var bytes = await LcuConnection.LcuHttpClient.GetByteArrayAsync(avatarUrl);
+        var bytes = await LcuNet.Client.GetByteArrayAsync(avatarUrl);
         using var ms = new MemoryStream(bytes);
         var bitmap = new BitmapImage();
         bitmap.BeginInit();

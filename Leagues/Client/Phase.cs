@@ -2,7 +2,6 @@ using System.IO;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using static Leagues.Client.LcuConnection;
 
 namespace Leagues.Client;
 
@@ -38,7 +37,7 @@ public sealed class Phase : IAsyncDisposable
             monitorCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var token = monitorCts.Token;
 
-            var monitoredSocket = (ClientWebSocket)await LcuConnectionFactory.CreateWebSocketAsync();
+            var monitoredSocket = await LcuNet.GetWebSocket();
             socket = monitoredSocket;
             await SubscribeAsync(monitoredSocket, token);
             await InitializePhaseAsync(token);
@@ -66,7 +65,7 @@ public sealed class Phase : IAsyncDisposable
     {
         try
         {
-            using var response = await LcuHttpClient.GetAsync(LcuEndPoint.GameflowPhase, token);
+            using var response = await LcuNet.Client.GetAsync(LcuEndPoint.GameflowPhase, token);
             if (!response.IsSuccessStatusCode)
                 return;
 

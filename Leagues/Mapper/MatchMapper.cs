@@ -5,31 +5,9 @@ using Leagues.Services;
 
 namespace Leagues.Mapper;
 
-public class MatchSummary(
-    long gameId,
-    DateTimeOffset playedAt,
-    TimeSpan duration,
-    string gameMode,
-    int championId,
-    bool win,
-    int kills,
-    int deaths,
-    int assists)
-{
-    public long GameId { get; } = gameId;
-    public DateTimeOffset PlayedAt { get; } = playedAt;
-    public TimeSpan Duration { get; } = duration;
-    public string GameMode { get; } = gameMode;
-    public int ChampionId { get; } = championId;
-    public bool Win { get; } = win;
-    public int Kills { get; } = kills;
-    public int Deaths { get; } = deaths;
-    public int Assists { get; } = assists;
-}
-
 public static class MatchMapper
 {
-    private static readonly Dictionary<string, List<MatchSummary>> Cache = new();
+    private static readonly Dictionary<string, List<MatchSummary>> Cache = [];
 
     public static async Task<List<MatchSummary>?> ToSummaries(string playerName, int begIndex, int endIndex)
     {
@@ -60,7 +38,6 @@ public static class MatchMapper
                     deaths: participant.Stats.Deaths,
                     assists: participant.Stats.Assists);
             })
-            .Where(summary => summary != null)
             .ToList();
         Cache.Add(playerUuid, summaries);
         return summaries;

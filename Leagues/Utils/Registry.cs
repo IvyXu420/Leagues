@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using Leagues.Logging;
 using Microsoft.Win32;
-using static Leagues.Logging.Logging;
 
 namespace Leagues.Utils;
 

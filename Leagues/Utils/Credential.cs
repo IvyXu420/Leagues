@@ -1,15 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using static Leagues.Logging.Logging;
+using Leagues.Logging;
 
 namespace Leagues.Client;
-
-public readonly struct ClientCredentials(string token, int port)
-{
-    public string Token { get; } = token;
-    public int Port { get; } = port;
-}
 
 public static class Credential
 {
@@ -24,7 +18,7 @@ public static class Credential
         return Process.GetProcessesByName(TargetProcess).Length > 0;
     }
 
-    public static bool TryGetCredentials(out ClientCredentials credentials)
+    public static bool TryGetCredentials(out LcuCredential credentials)
     {
         var args = GetArgs();
         var token = TryReadArgumentValue(args, "--remoting-auth-token=");
@@ -32,7 +26,7 @@ public static class Credential
 
         if (!string.IsNullOrWhiteSpace(token) && int.TryParse(portValue, out var port) && port is > 0 and <= 65535)
         {
-            credentials = new ClientCredentials(token!, port);
+            credentials = new LcuCredential(token!, port);
             return true;
         }
 

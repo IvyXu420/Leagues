@@ -59,5 +59,5 @@ public static class LcuEndPoint
         => "lol-game-data/assets/v1/champion-summary.json";
 
     public static string LiveClientDataPlayerList()
-        => "https://127.0.0.1:2999/liveclientdata/playerlist";
+        => "liveclientdata/playerlist";
 }

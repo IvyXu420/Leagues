@@ -1,13 +1,7 @@
-using System.Collections.ObjectModel;
 using System.Windows;
+using Leagues.ViewModels;
 
 namespace Leagues.Logging;
-
-public static class Logging
-{
-    public static readonly ObservableCollection<string> Entries = [];
-    public static readonly Logger Logger = new();
-}
 
 public enum LogLevel
 {
@@ -17,27 +11,28 @@ public enum LogLevel
     Error,
 }
 
-public class Logger(LogLevel logLevel = LogLevel.Info)
+public static class Logger
 {
-    public void Info(string message)
+    private static LogLevel logLevel = LogLevel.Info;
+    public static void Info(string message)
     {
         if (logLevel <= LogLevel.Info)
             Log(message, "INFO");
     }
 
-    public void Warn(string message)
+    public static void Warn(string message)
     {
         if (logLevel <= LogLevel.Warn)
             Log(message, "WARN");
     }
 
-    public void Error(string message)
+    public static void Error(string message)
     {
         if (logLevel <= LogLevel.Error)
             Log(message, "ERROR");
     }
 
-    public void Debug(string message)
+    public static void Debug(string message)
     {
         if (logLevel <= LogLevel.Debug)
             Log(message, "DEBUG");
@@ -49,7 +44,7 @@ public class Logger(LogLevel logLevel = LogLevel.Info)
         // https://stackoverflow.com/questions/18331723
         Application.Current.Dispatcher.Invoke((Action)delegate
         {
-            Logging.Entries.Add($"{DateTime.Now:HH:m:ss} {level}: {message}");
+            HomeViewModel.LogEntries.Add($"{DateTime.Now:HH:m:ss} {level}: {message}");
         });
     }
 }

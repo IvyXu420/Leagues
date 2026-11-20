@@ -14,11 +14,11 @@ public class RiotClientSettingsServiceTests
 
         try
         {
-            var service = new RiotClientSettingsService(settingsPath);
+            var riotClientSetting = new RiotClientSettings(settingsPath);
 
-            Assert.Equal("zh_CN", service.LoadLocale());
-            Assert.True(service.SaveLocale("en_US"));
-            Assert.Equal("en_US", service.LoadLocale());
+            Assert.Equal("zh_CN", riotClientSetting.LoadLocale());
+            Assert.True(riotClientSetting.SaveLocale("en_US"));
+            Assert.Equal("en_US", riotClientSetting.LoadLocale());
 
             Assert.Contains("locale: \"en_US\"", File.ReadAllText(settingsPath));
         }

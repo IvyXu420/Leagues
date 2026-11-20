@@ -1,6 +1,5 @@
 using System.Text.Json;
-using static Leagues.Client.LcuConnection;
-using static Leagues.Logging.Logging;
+using Leagues.Logging;
 
 namespace Leagues.Client;
 
@@ -14,7 +13,7 @@ public static class Uuid
     {
         try
         {
-            using var response = await LcuHttpClient.GetAsync(LcuEndPoint.Summoner(playerId));
+            using var response = await LcuNet.Client.GetAsync(LcuEndPoint.Summoner(playerId));
             var content = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)

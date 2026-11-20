@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Leagues.Client;
 using Leagues.Services;
-using static Leagues.Client.LcuConnection;
 
 namespace Leagues.ViewModels;
 
@@ -123,7 +122,7 @@ public partial class MatchStatItemViewModel(ParticipantStats stats, Func<string,
     public async Task LoadAvatarAsync(bool ingame)
     {
         var endpoint = ingame ? LcuEndPoint.ChampionAvatar(Stats.AvatarIconId) : LcuEndPoint.ProfileIcon(Stats.AvatarIconId);
-        var bytes = await LcuHttpClient.GetByteArrayAsync(endpoint);
+        var bytes = await LcuNet.Client.GetByteArrayAsync(endpoint);
         using var stream = new MemoryStream(bytes);
         var avatar = new BitmapImage();
         avatar.BeginInit();

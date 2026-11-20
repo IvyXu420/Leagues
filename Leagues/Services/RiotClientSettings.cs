@@ -5,7 +5,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Leagues.Services;
 
-public sealed class RiotClientSettingsService(string? settingPath = null)
+public sealed class RiotClientSettings(string? settingPath = null)
 {
     private static readonly string SettingFileName = "RiotClientSettings.yaml";
 

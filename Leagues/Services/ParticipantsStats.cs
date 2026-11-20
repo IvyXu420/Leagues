@@ -1,35 +1,9 @@
 using System.Text.Json;
 using Leagues.Client;
 using Leagues.Dto;
-using static Leagues.Client.LcuConnection;
-using static Leagues.Logging.Logging;
+using Leagues.Logging;
 
 namespace Leagues.Services;
-
-/// <summary>
-/// A general participant statistics class,
-/// creating from Chat API and LiveClient API.
-/// displayed on the Stats page during the game.
-/// </summary>
-/// <param name="playerName"></param>
-/// <param name="summonerLevel"></param>
-/// <param name="avatarIconId"></param>
-/// <param name="kda"></param>
-/// <param name="winRate"></param>
-public sealed class ParticipantStats(
-    string playerName,
-    int summonerLevel,
-    int avatarIconId,
-    double kda,
-    double winRate
-    )
-{
-    public string PlayerName { get; } = playerName;
-    public int SummonerLevel { get; } = summonerLevel;
-    public int AvatarIconId { get; } = avatarIconId;
-    public double Kda { get; } = kda;
-    public double WinRate { get; } = winRate;
-}
 
 public static class ParticipantsStats
 {
@@ -54,11 +28,7 @@ public static class ParticipantsStats
     private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsLiveDataAsync
         (CancellationToken cancellationToken)
     {
-        if (!Credential.TryGetCredentials(out var credentials))
-            return [];
-
-        using var client = LcuConnectionFactory.CreateHttpClient(LcuEndPoint.LiveClientDataPlayerList(), credentials);
-        using var response = await client.GetAsync(LcuEndPoint.LiveClientDataPlayerList(), cancellationToken);
+        using var response = await LcuNet.LiveClient.GetAsync(LcuEndPoint.LiveClientDataPlayerList(), cancellationToken);
         if (!response.IsSuccessStatusCode)
             return [];
 
@@ -78,7 +48,7 @@ public static class ParticipantsStats
         if (championIds is not null)
             return championIds;
 
-        using var response = await LcuHttpClient.GetAsync(
+        using var response = await LcuNet.Client.GetAsync(
             LcuEndPoint.ChampionSummary, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
@@ -109,7 +79,7 @@ public static class ParticipantsStats
     private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsChampSelectAsync(
         CancellationToken cancellationToken)
     {
-        using var conversationsResponse = await LcuHttpClient.GetAsync(
+        using var conversationsResponse = await LcuNet.Client.GetAsync(
             LcuEndPoint.ChatConversations, cancellationToken);
         if (!conversationsResponse.IsSuccessStatusCode)
             return [];
@@ -130,7 +100,7 @@ public static class ParticipantsStats
         if (string.IsNullOrWhiteSpace(conversationId))
             return [];
 
-        using var participantsResponse = await LcuHttpClient.GetAsync(
+        using var participantsResponse = await LcuNet.Client.GetAsync(
             LcuEndPoint.ChatConversationParticipants(conversationId!), cancellationToken);
         if (!participantsResponse.IsSuccessStatusCode)
             return [];
@@ -175,7 +145,7 @@ public static class ParticipantsStats
             if (puuid == null)
                 return null;
 
-            using var response = await LcuHttpClient.GetAsync(
+            using var response = await LcuNet.Client.GetAsync(
                 LcuEndPoint.SummonerOverView(puuid), cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
@@ -208,7 +178,7 @@ public static class ParticipantsStats
         string playerName, string puuid, int summonerLevel, int avatarIconId,
         CancellationToken cancellationToken)
     {
-        var historyResponse = await LcuHttpClient.GetAsync(LcuEndPoint.MatchHistory(puuid), cancellationToken);
+        var historyResponse = await LcuNet.Client.GetAsync(LcuEndPoint.MatchHistory(puuid), cancellationToken);
         if (!historyResponse.IsSuccessStatusCode)
             return new(playerName, summonerLevel, avatarIconId, 0, 0);
 

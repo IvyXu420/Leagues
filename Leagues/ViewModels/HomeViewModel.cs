@@ -4,9 +4,9 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Leagues.Client;
+using Leagues.Logging;
 using Leagues.Services;
 using Leagues.Utils;
-using static Leagues.Logging.Logging;
 
 namespace Leagues.ViewModels;
 
@@ -33,7 +33,8 @@ public partial class HomeViewModel : ObservableObject
     private volatile bool suppressNextAutoAccept;
     private volatile bool showingFeatureMode;
     public static readonly Phase PhaseMonitor = new();
-    public static ObservableCollection<string> LogEntries => Entries;
+
+    public static ObservableCollection<string> LogEntries { get; } = [];
 
     private readonly Dispatcher dispatcher;
     private readonly DispatcherTimer clientPollTimer = new() { Interval = TimeSpan.FromSeconds(2) };

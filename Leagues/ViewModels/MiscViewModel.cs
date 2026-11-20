@@ -6,7 +6,7 @@ namespace Leagues.ViewModels;
 
 public partial class MiscViewModel : ObservableObject
 {
-    private readonly RiotClientSettingsService settingsService;
+    private readonly RiotClientSettings settingsService;
 
     [ObservableProperty] public partial string SelectedLanguage { get; set; }
 
@@ -20,7 +20,7 @@ public partial class MiscViewModel : ObservableObject
 
     public MiscViewModel()
     {
-        settingsService = new RiotClientSettingsService();
+        settingsService = new RiotClientSettings();
         SelectedLanguage = settingsService.LoadLocale() ?? AvailableLanguages[0];
     }
 

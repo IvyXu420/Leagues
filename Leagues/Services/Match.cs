@@ -1,6 +1,5 @@
 using Leagues.Client;
-using static Leagues.Client.LcuConnection;
-using static Leagues.Logging.Logging;
+using Leagues.Logging;
 
 namespace Leagues.Services;
 
@@ -10,7 +9,7 @@ public static class Match
     {
         try
         {
-            using var response = await LcuHttpClient.PostAsync("lol-matchmaking/v1/ready-check/accept", null);
+            using var response = await LcuNet.Client.PostAsync("lol-matchmaking/v1/ready-check/accept", null);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -24,7 +23,7 @@ public static class Match
     {
         try
         {
-            using var response = await LcuHttpClient.PostAsync("lol-matchmaking/v1/ready-check/decline", null);
+            using var response = await LcuNet.Client.PostAsync("lol-matchmaking/v1/ready-check/decline", null);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -47,7 +46,7 @@ public static class Match
         if (playerUuid == null)
             return null;
 
-        var response = await LcuHttpClient.GetAsync(LcuEndPoint.MatchHistory(playerUuid, begIndex, endIndex));
+        var response = await LcuNet.Client.GetAsync(LcuEndPoint.MatchHistory(playerUuid, begIndex, endIndex));
         if (response.IsSuccessStatusCode)
             return await response.Content.ReadAsStringAsync();
 
