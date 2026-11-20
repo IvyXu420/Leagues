@@ -2,7 +2,7 @@ using System.IO;
 using System.Windows.Media.Imaging;
 using Leagues.Client;
 
-namespace Leagues.Mapper;
+namespace Leagues.Mappers;
 
 public static class ChampionMapper
 {

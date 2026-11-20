@@ -3,8 +3,11 @@ using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Leagues.Client;
+using Leagues.Models;
 
-public partial class MatchStatItemViewModel(ParticipantStats stats, Func<string, Task> openSearch) : ObservableObject
+namespace Leagues.ViewModels;
+
+public partial class MatchStatsItemViewModel(ParticipantStats stats, Func<string, Task> openSearch) : ObservableObject
 {
     public ParticipantStats Stats { get; } = stats;
 

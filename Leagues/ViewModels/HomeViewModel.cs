@@ -28,7 +28,7 @@ public partial class HomeViewModel : ObservableObject
 
     [ObservableProperty] public partial string AutoAcceptButtonText { get; set; }
 
-    [ObservableProperty] public partial bool IsAutoAcceptEnabled { get; set; } = Setting.Config?.AutoAccept ?? false;
+    [ObservableProperty] public partial bool IsAutoAcceptEnabled { get; set; } = AppSettings.Config?.AutoAccept ?? false;
 
     private volatile bool suppressNextAutoAccept;
     private volatile bool showingFeatureMode;
@@ -55,17 +55,17 @@ public partial class HomeViewModel : ObservableObject
 
     private static async Task TryAutoAcceptAsync()
     {
-        var accepted = await Match.Accept();
+        var accepted = await MatchService.Accept();
         Logger.Info(accepted ? "Match Accepted" : "Failed to accept match");
     }
 
     [RelayCommand(CanExecute = nameof(CanToggleAutoAccept))]
     private async Task ToggleAutoAccept()
     {
-        if (Setting.Config is not null)
+        if (AppSettings.Config is not null)
         {
-            Setting.Config.AutoAccept = IsAutoAcceptEnabled;
-            await Setting.UpdateSetting();
+            AppSettings.Config.AutoAccept = IsAutoAcceptEnabled;
+            await AppSettings.UpdateSetting();
         }
 
         AutoAcceptButtonText = IsAutoAcceptEnabled ? "Disable AutoAccept" : "Enable AutoAccept";
@@ -97,7 +97,7 @@ public partial class HomeViewModel : ObservableObject
         }
 
         AcceptButtonVisibility = Visibility.Visible;
-        var declined = await Match.Decline();
+        var declined = await MatchService.Decline();
         DeclineButtonVisibility = Visibility.Collapsed;
         Logger.Info(declined ? "Match declined" : "Failed to decline match");
     }
@@ -107,7 +107,7 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAcceptMatch))]
     private async Task AcceptMatchAsync()
     {
-        var accepted = await Match.Accept();
+        var accepted = await MatchService.Accept();
         AcceptButtonVisibility = Visibility.Collapsed;
         Logger.Info(accepted ? "Match accepted" : "Failed to accept match");
     }

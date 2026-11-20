@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Leagues.Dto.LiveClient;
+namespace Leagues.Dto;
 
 public record RerollPointsDto
 {

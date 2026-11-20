@@ -1,3 +1,5 @@
+namespace Leagues.Models;
+
 /// <summary>
 /// A general participant statistics class,
 /// creating from the Chat API and LiveClient API.

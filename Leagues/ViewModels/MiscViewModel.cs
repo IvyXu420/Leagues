@@ -1,12 +1,12 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Leagues.Services;
+using Leagues.Client;
 
 namespace Leagues.ViewModels;
 
 public partial class MiscViewModel : ObservableObject
 {
-    private readonly RiotClientSettings settingsService;
+    private readonly ClientSettings settings;
 
     [ObservableProperty] public partial string SelectedLanguage { get; set; }
 
@@ -20,12 +20,12 @@ public partial class MiscViewModel : ObservableObject
 
     public MiscViewModel()
     {
-        settingsService = new RiotClientSettings();
-        SelectedLanguage = settingsService.LoadLocale() ?? AvailableLanguages[0];
+        settings = new();
+        SelectedLanguage = settings.LoadLocale() ?? AvailableLanguages[0];
     }
 
     partial void OnSelectedLanguageChanged(string value)
     {
-        settingsService.SaveLocale(value);
+        settings.SaveLocale(value);
     }
 }

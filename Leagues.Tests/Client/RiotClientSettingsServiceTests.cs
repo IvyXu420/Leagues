@@ -1,9 +1,9 @@
 using System.IO;
-using Leagues.Services;
+using Leagues.Client;
 
-namespace Leagues.Tests.Models.Services;
+namespace Leagues.Tests.Client;
 
-public class RiotClientSettingsServiceTests
+public class ClientSettingsTests
 {
     [Fact]
     public void SaveLocale_UpdatesInstallGlobalsLocale()
@@ -14,11 +14,11 @@ public class RiotClientSettingsServiceTests
 
         try
         {
-            var riotClientSetting = new RiotClientSettings(settingsPath);
+            var settings = new ClientSettings(settingsPath);
 
-            Assert.Equal("zh_CN", riotClientSetting.LoadLocale());
-            Assert.True(riotClientSetting.SaveLocale("en_US"));
-            Assert.Equal("en_US", riotClientSetting.LoadLocale());
+            Assert.Equal("zh_CN", settings.LoadLocale());
+            Assert.True(settings.SaveLocale("en_US"));
+            Assert.Equal("en_US", settings.LoadLocale());
 
             Assert.Contains("locale: \"en_US\"", File.ReadAllText(settingsPath));
         }

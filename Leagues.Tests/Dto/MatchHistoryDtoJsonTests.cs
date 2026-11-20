@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Leagues.Dto.MatchHistory;
 
-namespace Leagues.Tests.Models.Dto;
+namespace Leagues.Tests.Dto;
 
 public class MatchHistoryDtoJsonTests
 {

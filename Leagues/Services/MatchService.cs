@@ -3,7 +3,7 @@ using Leagues.Logging;
 
 namespace Leagues.Services;
 
-public static class Match
+public static class MatchService
 {
     public static async Task<bool> Accept()
     {
@@ -46,7 +46,8 @@ public static class Match
         if (playerUuid == null)
             return null;
 
-        var response = await LcuNet.Client.GetAsync(LcuEndPoint.MatchHistory(playerUuid, begIndex, endIndex));
+        var response = await LcuNet.Client.GetAsync(
+            LcuEndPoint.MatchHistory(playerUuid, begIndex, endIndex));
         if (response.IsSuccessStatusCode)
             return await response.Content.ReadAsStringAsync();
 

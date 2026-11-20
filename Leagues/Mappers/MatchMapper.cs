@@ -1,9 +1,10 @@
 using System.Text.Json;
 using Leagues.Client;
 using Leagues.Dto.MatchHistory;
+using Leagues.Models;
 using Leagues.Services;
 
-namespace Leagues.Mapper;
+namespace Leagues.Mappers;
 
 public static class MatchMapper
 {
@@ -11,7 +12,7 @@ public static class MatchMapper
 
     public static async Task<List<MatchSummary>?> ToSummaries(string playerName, int begIndex, int endIndex)
     {
-        var json = await Match.QueryAsync(playerName, begIndex, endIndex);
+        var json = await MatchService.QueryAsync(playerName, begIndex, endIndex);
         if (json == null)
             return null;
 

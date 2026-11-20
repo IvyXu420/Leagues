@@ -22,7 +22,7 @@
                  BorderThickness="0"
                  HorizontalContentAlignment="Stretch">
             <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type viewModels:MatchStatItemViewModel}">
+                <DataTemplate DataType="{x:Type viewModels:MatchStatsItemViewModel}">
                     <materialDesign:Card Margin="0,5" Padding="8" Cursor="Hand">
                     <materialDesign:Card.InputBindings>
                         <MouseBinding MouseAction="LeftClick"

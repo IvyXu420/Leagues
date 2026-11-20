@@ -1,7 +1,7 @@
 using System.Globalization;
-using Leagues.Convertor;
+using Leagues.Converters;
 
-namespace Leagues.Tests.Models.Convertor;
+namespace Leagues.Tests.Converters;
 
 public class WinLossConverterTests
 {

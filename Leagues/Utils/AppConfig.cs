@@ -1,6 +1,6 @@
 namespace Leagues.Utils;
 
-public class AppConfig
+public sealed class AppConfig
 {
     public bool AutoAccept { get; set; }
 }

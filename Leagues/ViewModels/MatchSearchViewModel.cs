@@ -1,6 +1,7 @@
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using Leagues.Mapper;
+using Leagues.Mappers;
+using Leagues.Models;
 
 namespace Leagues.ViewModels;
 

@@ -1,6 +1,6 @@
-using Leagues.Mapper;
+using Leagues.Models;
 
-namespace Leagues.Tests.Models.Mapper;
+namespace Leagues.Tests.Models;
 
 public class MatchSummaryTests
 {

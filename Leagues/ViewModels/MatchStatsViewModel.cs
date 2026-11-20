@@ -1,11 +1,7 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using Leagues.Client;
 using Leagues.Services;
 
 namespace Leagues.ViewModels;
@@ -25,7 +21,7 @@ public partial class MatchStatsViewModel : ObservableObject
         statsPollTimer.Start();
     }
 
-    public ObservableCollection<MatchStatItemViewModel> Players { get; } = [];
+    public ObservableCollection<MatchStatsItemViewModel> Players { get; } = [];
 
     [ObservableProperty] public partial string StatusText { get; private set; } = "Not in a match.";
 
@@ -37,11 +33,11 @@ public partial class MatchStatsViewModel : ObservableObject
         isLoading = true;
         try
         {
-            var stats = await ParticipantsStats.LoadAsync(ingame);
+            var stats = await ParticipantStatsService.LoadAsync(ingame);
             Players.Clear();
             foreach (var stat in stats)
             {
-                var item = new MatchStatItemViewModel(stat, openSearch);
+                var item = new MatchStatsItemViewModel(stat, openSearch);
                 Players.Add(item);
                 _ = item.LoadAvatarAsync(ingame);
             }

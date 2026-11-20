@@ -1,3 +1,5 @@
+namespace Leagues.Models;
+
 public readonly struct MatchSummary(
     long gameId,
     DateTimeOffset playedAt,

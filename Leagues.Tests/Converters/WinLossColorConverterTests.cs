@@ -1,8 +1,8 @@
 using System.Globalization;
 using System.Windows.Media;
-using Leagues.Convertor;
+using Leagues.Converters;
 
-namespace Leagues.Tests.Models.Convertor;
+namespace Leagues.Tests.Converters;
 
 public class WinLossColorConverterTests
 {

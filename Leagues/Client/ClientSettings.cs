@@ -3,9 +3,9 @@ using System.Text;
 using Leagues.Utils;
 using YamlDotNet.RepresentationModel;
 
-namespace Leagues.Services;
+namespace Leagues.Client;
 
-public sealed class RiotClientSettings(string? settingPath = null)
+public sealed class ClientSettings(string? settingPath = null)
 {
     private static readonly string SettingFileName = "RiotClientSettings.yaml";
 

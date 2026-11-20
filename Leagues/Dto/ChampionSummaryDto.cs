@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace Leagues.Dto;
 
+/// <summary>
+/// Champion's basic info retrived from the LCU API.
+/// </summary>
 public sealed record ChampionSummaryDto
 {
     [JsonPropertyName("id")]

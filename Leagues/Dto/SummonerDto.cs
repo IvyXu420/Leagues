@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Leagues.Dto.LiveClient;
+namespace Leagues.Dto;
 
-public sealed record LiveClientPlayerListDto
+public record SummonerDto
 {
     [JsonPropertyName("accountId")]
     public long AccountId { get; set; }

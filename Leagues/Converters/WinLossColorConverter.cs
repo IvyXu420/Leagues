@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace Leagues.Convertor;
+namespace Leagues.Converters;
 
 public class WinLossColorConverter : IValueConverter
 {

@@ -1,6 +1,6 @@
 using Leagues.Client;
 
-namespace Leagues.Tests.Models.Client;
+namespace Leagues.Tests.Client;
 
 public class LcuEndPointTests
 {

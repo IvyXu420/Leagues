@@ -1,6 +1,6 @@
 using System.Windows.Input;
 using Leagues.Logging;
-using Leagues.Mapper;
+using Leagues.Mappers;
 using Leagues.ViewModels;
 
 namespace Leagues.Views;

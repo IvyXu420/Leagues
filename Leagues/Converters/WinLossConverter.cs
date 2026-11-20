@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Windows.Data;
 
-namespace Leagues.Convertor;
+namespace Leagues.Converters;
 
 public class WinLossConverter : IValueConverter
 {

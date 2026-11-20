@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Leagues.Utils;
 
-public static class Setting
+public static class AppSettings
 {
     private static readonly string AppDataFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
