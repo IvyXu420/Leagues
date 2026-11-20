@@ -15,11 +15,6 @@ public static class Setting
 
     private static readonly JsonSerializerOptions Option = new() { WriteIndented = true };
 
-    public class AppConfig
-    {
-        public bool AutoAccept { get; set; }
-    }
-
     /// <summary>
     /// If Config is changed, UpdateSetting() should be explicitly called asynchronously
     /// to save the changes to the settings.json file.

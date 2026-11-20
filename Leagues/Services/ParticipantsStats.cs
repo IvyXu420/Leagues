@@ -1,6 +1,9 @@
 using System.Text.Json;
 using Leagues.Client;
 using Leagues.Dto;
+using Leagues.Dto.Chat;
+using Leagues.Dto.LiveClient;
+using Leagues.Dto.MatchHistory;
 using Leagues.Logging;
 
 namespace Leagues.Services;
@@ -183,7 +186,7 @@ public static class ParticipantsStats
             return new(playerName, summonerLevel, avatarIconId, 0, 0);
 
         using var historyStream = await historyResponse.Content.ReadAsStreamAsync();
-        var history = await JsonSerializer.DeserializeAsync<MatchHistoryResponse>(historyStream,
+        var history = await JsonSerializer.DeserializeAsync<MatchHistoryDto>(historyStream,
             cancellationToken: cancellationToken);
         var games = history?.Games.Games ?? [];
         var playerGames = games.SelectMany(static game => game.Participants).ToList();

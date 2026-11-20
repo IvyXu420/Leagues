@@ -1,7 +1,7 @@
 /// <summary>
 /// A general participant statistics class,
-/// creating from Chat API and LiveClient API.
-/// displayed on the Stats page during the game.
+/// creating from the Chat API and LiveClient API.
+/// displayed on the Stats page in-game.
 /// </summary>
 /// <param name="playerName"></param>
 /// <param name="summonerLevel"></param>

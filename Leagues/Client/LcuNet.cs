@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
 using System.Text;
+using Leagues.Utils;
 
 namespace Leagues.Client;
 

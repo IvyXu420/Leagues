@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using Leagues.Client;
 using Leagues.Logging;
 
-namespace Leagues.Client;
+namespace Leagues.Utils;
 
 public static class Credential
 {

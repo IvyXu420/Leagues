@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Leagues.Dto;
 
-public sealed class ChampionSummaryDto
+public sealed record ChampionSummaryDto
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }

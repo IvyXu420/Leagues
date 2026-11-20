@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
 
-namespace Leagues.Dto;
+namespace Leagues.Dto.LiveClient;
 
-public class LiveClientPlayerListDto
+public sealed record LiveClientPlayerListDto
 {
     [JsonPropertyName("accountId")]
     public long AccountId { get; set; }
@@ -51,22 +51,4 @@ public class LiveClientPlayerListDto
 
     [JsonPropertyName("xpUntilNextLevel")]
     public int XpUntilNextLevel { get; set; }
-}
-
-public class RerollPointsDto
-{
-    [JsonPropertyName("currentPoints")]
-    public int CurrentPoints { get; set; }
-
-    [JsonPropertyName("maxRolls")]
-    public int MaxRolls { get; set; }
-
-    [JsonPropertyName("numberOfRolls")]
-    public int NumberOfRolls { get; set; }
-
-    [JsonPropertyName("pointsCostToRoll")]
-    public int PointsCostToRoll { get; set; }
-
-    [JsonPropertyName("pointsToReroll")]
-    public int PointsToReroll { get; set; }
 }

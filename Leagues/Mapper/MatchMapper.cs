@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Leagues.Client;
-using Leagues.Dto;
+using Leagues.Dto.MatchHistory;
 using Leagues.Services;
 
 namespace Leagues.Mapper;
@@ -22,7 +22,7 @@ public static class MatchMapper
         if (Cache.TryGetValue(playerUuid, out var res))
             return res;
 
-        var history = JsonSerializer.Deserialize<MatchHistoryResponse>(json);
+        var history = JsonSerializer.Deserialize<MatchHistoryDto>(json);
         var summaries = history!.Games.Games
             .Select(game =>
             {

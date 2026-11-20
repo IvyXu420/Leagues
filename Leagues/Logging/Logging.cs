@@ -3,14 +3,6 @@ using Leagues.ViewModels;
 
 namespace Leagues.Logging;
 
-public enum LogLevel
-{
-    Debug,
-    Info,
-    Warn,
-    Error,
-}
-
 public static class Logger
 {
     private static LogLevel logLevel = LogLevel.Info;
