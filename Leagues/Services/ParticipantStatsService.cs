@@ -10,14 +10,12 @@ namespace Leagues.Services;
 
 public static class ParticipantStatsService
 {
-    public static async Task<IReadOnlyList<ParticipantStats>> LoadAsync(bool ingame,
+    public static async Task<IReadOnlyList<ParticipantStats>> GetStatsAsync(bool ingame,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            if (!ingame)
-                return await LoadStatsChampSelectAsync(cancellationToken);
-            return await LoadStatsLiveDataAsync(cancellationToken);
+            return await new StatsGetter(ingame, cancellationToken).Get();
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -26,93 +24,107 @@ public static class ParticipantStatsService
         }
     }
 
-    private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsLiveDataAsync
-        (CancellationToken cancellationToken)
+    private class StatsGetter(bool ingame, CancellationToken cancellationToken)
     {
-        var participants = await LcuNet.GetJsonAsync<List<LiveDataParticipantDto>>(
-            LcuNet.LiveClient, LcuEndPoint.LiveClientDataPlayerList(), cancellationToken
-        ) ?? [];
+        private readonly StatsParser parser = new(cancellationToken);
 
-        var championIdMap = await ChampionIdsMapService.GetMapAsync(cancellationToken);
-        var stats = await Task.WhenAll(participants
-            .Select(participant => ParseLiveDataParticipantAsync(
-                participant, cancellationToken)));
-        return [.. stats.OfType<ParticipantStats>()];
-    }
-
-    private static async Task<IReadOnlyList<ParticipantStats>> LoadStatsChampSelectAsync(
-        CancellationToken cancellationToken)
-    {
-        var conversations = await LcuNet.GetJsonAsync<List<ChatConversationDto>>(
-            LcuEndPoint.ChatConversations, cancellationToken);
-        if (conversations is null || conversations.Count == 0)
+        public async Task<IReadOnlyList<ParticipantStats>> Get()
         {
-            Logger.Warn("No chat conversation is available for champion select.");
-            return [];
+            if (ingame)
+                return await GetStatsChampSelectAsync();
+            return await GetStatsLiveDataAsync();
         }
 
-        var conversationId = conversations[0].Id;
-        if (string.IsNullOrWhiteSpace(conversationId))
-            return [];
+        private async Task<IReadOnlyList<ParticipantStats>> GetStatsLiveDataAsync
+            ()
+        {
+            var participants = await LcuNet.GetJsonAsync<List<LiveDataParticipantDto>>(
+                LcuNet.LiveClient, LcuEndPoint.LiveClientDataPlayerList(), cancellationToken
+            ) ?? [];
 
-        var participants = await LcuNet.GetJsonAsync<List<ChatParticipantDto>>(
-            LcuEndPoint.ChatConversationParticipants(conversationId), cancellationToken) ?? [];
-        var stats = await Task.WhenAll(participants
-            .Select(participant => ParseChatParticipantAsync(participant, cancellationToken)));
-        return [.. stats.OfType<ParticipantStats>()];
+            var stats = await Task.WhenAll(participants
+                .Select(participant => parser.ParseLiveDataParticipantAsync(
+                    participant)));
+            return [.. stats.OfType<ParticipantStats>()];
+        }
+
+        private async Task<IReadOnlyList<ParticipantStats>> GetStatsChampSelectAsync(
+        )
+        {
+            var conversations = await LcuNet.GetJsonAsync<List<ChatConversationDto>>(
+                LcuEndPoint.ChatConversations, cancellationToken);
+            if (conversations is null || conversations.Count == 0)
+            {
+                Logger.Warn("No chat conversation is available for champion select.");
+                return [];
+            }
+
+            var conversationId = conversations[0].Id;
+            if (string.IsNullOrWhiteSpace(conversationId))
+                return [];
+
+            var participants = await LcuNet.GetJsonAsync<List<ChatParticipantDto>>(
+                LcuEndPoint.ChatConversationParticipants(conversationId), cancellationToken) ?? [];
+            var stats = await Task.WhenAll(participants
+                .Select(participant => parser.ParseChatParticipantAsync(participant)));
+            return [.. stats.OfType<ParticipantStats>()];
+        }
     }
 
-    private static async Task<ParticipantStats?> ParseChatParticipantAsync(
-        ChatParticipantDto participant,
-        CancellationToken cancellationToken)
+    private class StatsParser(CancellationToken cancellationToken)
     {
-        var puuid = participant.Puuid;
-
-        var playerName = participant.GameName;
-        var tagLine = participant.GameTag;
-        playerName = $"{playerName}#{tagLine}";
-
-        int.TryParse(participant.Lol.Level, out var level);
-        return await CreateSummonerStatsAsync(playerName, puuid, level,
-            participant.Icon, cancellationToken);
-    }
-
-    private static async Task<ParticipantStats?> ParseLiveDataParticipantAsync(
-        LiveDataParticipantDto participant,
-        CancellationToken cancellationToken)
-    {
-        try
+        public async Task<ParticipantStats?> ParseChatParticipantAsync(
+            ChatParticipantDto participant
+        )
         {
-            var playerName = participant.SummonerName;
-            var championName = participant.ChampionName;
-            // Render the champion avatar in-game.
-            var championIdMap = await ChampionIdsMapService.GetMapAsync(cancellationToken);
-            if (string.IsNullOrWhiteSpace(playerName) ||
-                !championIdMap.TryGetValue(championName, out var championId))
-                return null;
+            var puuid = participant.Puuid;
 
-            var summoner = await LcuNet.GetJsonAsync<SummonerDto>(
-                LcuEndPoint.Summoner(playerName), cancellationToken);
-            if (summoner == null)
-                return null;
-            var puuid = summoner.Puuid;
+            var playerName = participant.GameName;
+            var tagLine = participant.GameTag;
+            playerName = $"{playerName}#{tagLine}";
 
-            var overview = await LcuNet.GetJsonAsync<SummonerDto>(
-                LcuEndPoint.SummonerOverView(puuid), cancellationToken);
-            if (overview is null)
-                return null;
-
-            return await CreateSummonerStatsAsync(playerName, puuid, overview.SummonerLevel,
-                championId, cancellationToken);
+            int.TryParse(participant.Lol.Level, out var level);
+            return await CreateSummonerStatsAsync(playerName, puuid, level,
+                participant.Icon, cancellationToken);
         }
-        catch (OperationCanceledException)
+
+        public async Task<ParticipantStats?> ParseLiveDataParticipantAsync(
+            LiveDataParticipantDto participant
+        )
         {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            Logger.Warn($"Failed to load one live participant: {ex.Message}");
-            return null;
+            try
+            {
+                var playerName = participant.SummonerName;
+                var championName = participant.ChampionName;
+                // Render the champion avatar in-game.
+                var championIdMap = await ChampionIdsMapService.GetMapAsync(cancellationToken);
+                if (string.IsNullOrWhiteSpace(playerName) ||
+                    !championIdMap.TryGetValue(championName, out var championId))
+                    return null;
+
+                var summoner = await LcuNet.GetJsonAsync<SummonerDto>(
+                    LcuEndPoint.Summoner(playerName), cancellationToken);
+                if (summoner == null)
+                    return null;
+                var puuid = summoner.Puuid;
+
+                var overview = await LcuNet.GetJsonAsync<SummonerDto>(
+                    LcuEndPoint.SummonerOverView(puuid), cancellationToken);
+                if (overview is null)
+                    return null;
+
+                return await CreateSummonerStatsAsync(playerName, puuid, overview.SummonerLevel,
+                    championId, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn($"Failed to load one live participant: {ex.Message}");
+                return null;
+            }
         }
     }
 

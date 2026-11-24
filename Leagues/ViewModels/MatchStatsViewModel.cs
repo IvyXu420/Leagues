@@ -13,6 +13,7 @@ public partial class MatchStatsViewModel : ObservableObject
     private readonly DispatcherTimer statsPollTimer = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool isLoading;
     private bool? loaded;
+
     public MatchStatsViewModel(Func<string, Task> openSearch)
     {
         this.openSearch = openSearch;
@@ -33,7 +34,7 @@ public partial class MatchStatsViewModel : ObservableObject
         isLoading = true;
         try
         {
-            var stats = await ParticipantStatsService.LoadAsync(ingame);
+            var stats = await ParticipantStatsService.GetStatsAsync(ingame);
             Players.Clear();
             foreach (var stat in stats)
             {
@@ -82,7 +83,9 @@ public partial class MatchStatsViewModel : ObservableObject
 
     private Task LoadForPhaseAsync(string phase)
     {
-        return dispatcher.CheckAccess() ? LoadForPhaseOnUiAsync(phase) : dispatcher.InvokeAsync(() => LoadForPhaseOnUiAsync(phase)).Task.Unwrap();
+        return dispatcher.CheckAccess()
+            ? LoadForPhaseOnUiAsync(phase)
+            : dispatcher.InvokeAsync(() => LoadForPhaseOnUiAsync(phase)).Task.Unwrap();
     }
 
     private Task LoadForPhaseOnUiAsync(string phase) => phase switch
